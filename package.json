@@ -1,0 +1,72 @@
+{
+  "name": "cultiva",
+  "version": "0.2.1",
+  "description": "Grow your habits. Grow yourself.",
+  "main": "electron/main.js",
+  "author": "krwg",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "electron:dev": "npm run build && cross-env NODE_ENV=development VITE_DEV_SERVER_URL=http://localhost:3000 electron .",
+    "electron:dev:watch": "concurrently \"vite\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development VITE_DEV_SERVER_URL=http://localhost:3000 electron .\"",
+    "electron:build": "npm run build && electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "appId": "com.cultiva.app",
+    "productName": "Cultiva",
+    "directories": {
+      "output": "release",
+      "buildResources": "public"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/favicon.ico",
+        "to": "favicon.ico"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "dist/favicon.ico",
+      "artifactName": "Cultiva-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Cultiva",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "Cultiva-${version}-portable-${arch}.${ext}"
+    }
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3",
+    "vite": "^5.4.21",
+    "wait-on": "^7.2.0"
+  }
+}
