@@ -68,5 +68,8 @@
     "electron-builder": "^24.13.3",
     "vite": "^5.4.21",
     "wait-on": "^7.2.0"
+  },
+  "dependencies": {
+    "discord-rpc": "^4.0.1"
   }
 }

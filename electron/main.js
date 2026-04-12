@@ -1,10 +1,132 @@
-
 const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const isDev = process.env.NODE_ENV === 'development';
 
-let mainWindow;
+const { Client } = require('discord-rpc');
+
+const DISCORD_CLIENT_ID = '1492849856832606329';
+let rpc = null;
+let rpcReady = false;
+let discordEnabled = true;
+let mainWindow = null;
+let currentLocale = 'en';
+let currentPage = 'garden';
+
+/* ============================================ */
+/* DISCORD RICH PRESENCE                        */
+/* ============================================ */
+
+const DISCORD_STRINGS = {
+  en: {
+    garden: { details: 'In the garden', state: 'Growing habits' },
+    calendar: { details: 'Planning habits', state: 'Browsing calendar' },
+    stats: { details: 'Reviewing progress', state: 'Checking statistics' },
+    settings: { details: 'Customizing', state: 'Adjusting settings' },
+    trophy: { details: 'Trophy Garden', state: 'Admiring legacy trees' },
+    focus: { details: 'Focus Mode', state: 'Deep work session' },
+    pages: { details: 'Exploring Cultiva', state: 'Reading documentation' }
+  },
+  ru: {
+    garden: { details: 'В саду', state: 'Выращивает привычки' },
+    calendar: { details: 'Планирует', state: 'Смотрит календарь' },
+    stats: { details: 'Анализирует', state: 'Проверяет статистику' },
+    settings: { details: 'Настраивает', state: 'Меняет параметры' },
+    trophy: { details: 'Сад трофеев', state: 'Любуется деревьями' },
+    focus: { details: 'Режим фокуса', state: 'Глубокая работа' },
+    pages: { details: 'Изучает Cultiva', state: 'Читает документацию' }
+  }
+};
+
+function initDiscordRPC() {
+  if (rpc) return;
+  
+  rpc = new Client({ transport: 'ipc' });
+  
+  rpc.on('ready', () => {
+    console.log('[Discord] Rich Presence connected');
+    rpcReady = true;
+    if (discordEnabled) {
+      updateDiscordActivity();
+    }
+    
+    setInterval(() => {
+      if (rpcReady && discordEnabled) {
+        updateDiscordActivity();
+      }
+    }, 15000);
+  });
+  
+  rpc.on('disconnected', () => {
+    console.log('[Discord] Rich Presence disconnected');
+    rpcReady = false;
+  });
+  
+  rpc.login({ clientId: DISCORD_CLIENT_ID }).catch(err => {
+    console.warn('[Discord] Failed to connect:', err.message);
+    rpc = null;
+  });
+}
+
+function updateDiscordActivity(activityData = {}) {
+  if (!rpcReady || !rpc || !discordEnabled) return;
+  
+  const locale = activityData.locale || currentLocale;
+  const strings = DISCORD_STRINGS[locale] || DISCORD_STRINGS.en;
+  const page = activityData.page || currentPage;
+  const pageStrings = strings[page] || strings.garden;
+  
+  const activity = {
+    details: activityData.details || pageStrings.details,
+    state: activityData.state || pageStrings.state,
+    startTimestamp: activityData.startTimestamp || new Date(),
+    largeImageKey: activityData.largeImageKey || 'garden',
+    largeImageText: activityData.largeImageText || 'Cultiva',
+    smallImageKey: activityData.smallImageKey,
+    smallImageText: activityData.smallImageText,
+    partySize: activityData.partySize,
+    partyMax: activityData.partyMax,
+  };
+  
+  rpc.setActivity(activity).catch(err => {
+    console.warn('[Discord] Failed to update activity:', err.message);
+  });
+}
+
+function clearDiscordActivity() {
+  if (!rpcReady || !rpc) return;
+  
+  rpc.clearActivity().catch(err => {
+    console.warn('[Discord] Failed to clear activity:', err.message);
+  });
+}
+
+function shutdownDiscordRPC() {
+  if (rpc) {
+    if (rpcReady) {
+      clearDiscordActivity();
+    }
+    setTimeout(() => {
+      rpc.destroy().catch(() => {});
+      rpc = null;
+      rpcReady = false;
+    }, 500);
+  }
+}
+
+function detectPageFromUrl(url) {
+  if (url.includes('/calendar')) return 'calendar';
+  if (url.includes('/pages/')) return 'pages';
+  if (url.includes('settings') || url.includes('settings-modal')) return 'settings';
+  if (url.includes('stats')) return 'stats';
+  if (url.includes('trophy')) return 'trophy';
+  if (url.includes('focus')) return 'focus';
+  return 'garden';
+}
+
+/* ============================================ */
+/* WINDOW CREATION                              */
+/* ============================================ */
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -25,44 +147,31 @@ function createWindow() {
     show: false
   });
 
-  // ============================================
-  // 🔥 НАВИГАЦИЯ: Перехват открытия новых окон
-  // ============================================
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    // Внешние ссылки (http/https) открываем в браузере
     if (url.startsWith('https:') || url.startsWith('http:')) {
       shell.openExternal(url);
       return { action: 'deny' };
     }
-    
-    // Внутренние переходы разрешаем
     return { action: 'allow' };
   });
 
-  // ============================================
-  // 🔥 НАВИГАЦИЯ: Перехват will-navigate
-  // ============================================
   mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
     try {
       const parsedUrl = new URL(navigationUrl);
       
-      // Внешние ссылки открываем в браузере
       if (parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:') {
         event.preventDefault();
         shell.openExternal(navigationUrl);
         return;
       }
       
-      // Для file:// протокола проверяем существование файла
       if (parsedUrl.protocol === 'file:') {
         const requestedPath = decodeURIComponent(parsedUrl.pathname);
         
-        // Если файл существует, разрешаем навигацию
         if (fs.existsSync(requestedPath)) {
-          return; // Всё ок, продолжаем
+          return;
         }
         
-        // Пробуем найти относительно dist
         const distPath = path.join(__dirname, '../dist');
         const relativePath = requestedPath.replace(/^.*[\\/]dist[\\/]?/, '');
         const alternativePath = path.join(distPath, relativePath);
@@ -73,7 +182,6 @@ function createWindow() {
           return;
         }
         
-        // Если файл не найден — показываем ошибку в консоли
         console.warn('[Electron] File not found:', requestedPath);
       }
     } catch (error) {
@@ -81,20 +189,24 @@ function createWindow() {
     }
   });
 
-  // ============================================
-  // 🔥 НАВИГАЦИЯ: Обработка внутренних редиректов
-  // ============================================
   mainWindow.webContents.on('did-navigate', (event, url) => {
     console.log('[Electron] Navigated to:', url);
+    currentPage = detectPageFromUrl(url);
+    
+    if (discordEnabled) {
+      updateDiscordActivity({ page: currentPage });
+    }
   });
 
   mainWindow.webContents.on('did-navigate-in-page', (event, url) => {
     console.log('[Electron] In-page navigation:', url);
+    currentPage = detectPageFromUrl(url);
+    
+    if (discordEnabled) {
+      updateDiscordActivity({ page: currentPage });
+    }
   });
 
-  // ============================================
-  // Загрузка приложения
-  // ============================================
   if (isDev && process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
     mainWindow.webContents.openDevTools({ mode: 'detach' });
@@ -104,24 +216,24 @@ function createWindow() {
     mainWindow.loadFile(indexPath);
   }
 
-  // ============================================
-  // Обработчики событий окна
-  // ============================================
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
+    
+    if (discordEnabled) {
+      updateDiscordActivity({ page: 'garden' });
+    }
   });
 
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDesc, validatedURL) => {
     console.error('[Electron] Failed to load:', errorCode, errorDesc);
     console.error('[Electron] URL:', validatedURL);
     
-    // Показываем ошибку пользователю
     if (!isDev) {
       mainWindow.webContents.executeJavaScript(`
         document.body.innerHTML = \`
           <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui;color:#ff3b30;">
             <div style="text-align:center;">
-              <h2>⚠️ Failed to load page</h2>
+              <h2>Failed to load page</h2>
               <p>Error: \${errorDesc}</p>
               <button onclick="location.reload()" style="padding:10px 20px;margin-top:20px;cursor:pointer;">Reload</button>
             </div>
@@ -135,9 +247,6 @@ function createWindow() {
     console.error('[Electron] Render process gone:', details);
   });
 
-  // ============================================
-  // CSP для разрешения file:// навигации
-  // ============================================
   mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
@@ -152,15 +261,17 @@ function createWindow() {
   });
 
   mainWindow.on('closed', () => {
+    if (discordEnabled) {
+      clearDiscordActivity();
+    }
     mainWindow = null;
   });
 }
 
-// ============================================
-// IPC Handlers
-// ============================================
+/* ============================================ */
+/* IPC HANDLERS                                 */
+/* ============================================ */
 
-// Существующий handler для сохранения файлов
 ipcMain.handle('save-file', async (event, data, fileName) => {
   const { filePath } = await dialog.showSaveDialog(mainWindow, {
     title: 'Save backup',
@@ -176,7 +287,6 @@ ipcMain.handle('save-file', async (event, data, fileName) => {
   return { success: false };
 });
 
-// 🔥 НОВОЕ: Навигация на определённую страницу
 ipcMain.handle('navigate-to', (event, page) => {
   if (!mainWindow) return { success: false };
   
@@ -192,7 +302,6 @@ ipcMain.handle('navigate-to', (event, page) => {
   return { success: false, error: 'Page not found' };
 });
 
-// 🔥 НОВОЕ: Открыть календарь в отдельном окне (альтернативный метод)
 ipcMain.on('open-calendar-window', () => {
   const calendarWindow = new BrowserWindow({
     width: 1000,
@@ -216,7 +325,6 @@ ipcMain.on('open-calendar-window', () => {
   }
 });
 
-// 🔥 НОВОЕ: Получить путь к dist (для отладки)
 ipcMain.handle('get-app-path', () => {
   return {
     dist: path.join(__dirname, '../dist'),
@@ -224,10 +332,58 @@ ipcMain.handle('get-app-path', () => {
   };
 });
 
-// ============================================
-// App Lifecycle
-// ============================================
+ipcMain.handle('discord:update-activity', (event, activityData) => {
+  if (activityData.locale) {
+    currentLocale = activityData.locale;
+  }
+  if (activityData.page) {
+    currentPage = activityData.page;
+  }
+  
+  if (rpcReady && discordEnabled) {
+    updateDiscordActivity(activityData);
+    return { success: true };
+  }
+  return { success: false, error: 'Discord RPC not ready or disabled' };
+});
+
+ipcMain.handle('discord:status', () => {
+  return { 
+    connected: rpcReady, 
+    enabled: discordEnabled 
+  };
+});
+
+ipcMain.handle('discord:enable', () => {
+  discordEnabled = true;
+  if (rpcReady) {
+    updateDiscordActivity({ page: currentPage, locale: currentLocale });
+  }
+  return { success: true };
+});
+
+ipcMain.handle('discord:disable', () => {
+  discordEnabled = false;
+  if (rpcReady) {
+    clearDiscordActivity();
+  }
+  return { success: true };
+});
+
+ipcMain.handle('discord:set-locale', (event, locale) => {
+  currentLocale = locale || 'en';
+  if (rpcReady && discordEnabled) {
+    updateDiscordActivity({ locale: currentLocale });
+  }
+  return { success: true };
+});
+
+/* ============================================ */
+/* APP LIFECYCLE                                */
+/* ============================================ */
+
 app.whenReady().then(() => {
+  initDiscordRPC();
   createWindow();
 
   app.on('activate', () => {
@@ -236,5 +392,11 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+  shutdownDiscordRPC();
   if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('before-quit', () => {
+  clearDiscordActivity();
+  shutdownDiscordRPC();
 });

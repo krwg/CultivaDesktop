@@ -215,6 +215,17 @@ const TRANSLATIONS = {
         changelogDesc: 'See latest updates',
         dev: 'Dev',
         privacy: "Privacy",
+        discord: 'Discord',
+        discordRichPresence: 'Discord Rich Presence',
+        discordRichPresenceDesc: 'Show your garden activity on Discord',
+        discordStatus: 'Status',
+        discordPreview: 'Preview',
+        discordPreviewDesc: 'What others see on Discord',
+        discordMustBeRunning: 'Discord must be running on your computer',
+        discordConnected: 'Connected',
+        discordDisconnected: 'Disconnected',
+        discordDisabled: 'Disabled',
+        discordChecking: 'Checking...',
     },
     ru: {
         backBtn: 'Назад', calendar: 'Календарь', whatsNew: 'Что нового',
@@ -288,6 +299,17 @@ const TRANSLATIONS = {
         changelogDesc: 'Последние обновления',
         dev: 'Разработка',
         privacy: "Политика конфиденциальности",
+        discord: 'Discord',
+        discordRichPresence: 'Discord Rich Presence',
+        discordRichPresenceDesc: 'Показывать активность в саду в Discord',
+        discordStatus: 'Статус',
+        discordPreview: 'Предпросмотр',
+        discordPreviewDesc: 'Что видят другие в Discord',
+        discordMustBeRunning: 'Discord должен быть запущен на компьютере',
+        discordConnected: 'Подключено',
+        discordDisconnected: 'Отключено',
+        discordDisabled: 'Выключено',
+        discordChecking: 'Проверка...',
     }
 };
 
@@ -634,6 +656,8 @@ function initSettingsNavigation() {
         }
     });
 }
+
+
 
 /* ============================================ */
 /* PROFILE MANAGEMENT                           */
@@ -1406,6 +1430,161 @@ function toggleFocusMode(enabled) {
     renderGarden();
 }
 
+
+/* ============================================ */
+/* DISCORD SETTINGS UI (DESKTOP ONLY)           */
+/* ============================================ */
+
+function initDiscordSettings() {
+  const isElectron = typeof window.discord !== 'undefined';
+  const discordSection = document.querySelector('[data-section="discord"]');
+  const discordContent = document.getElementById('section-discord');
+  
+  if (!isElectron) {
+    if (discordSection) discordSection.style.display = 'none';
+    if (discordContent) discordContent.style.display = 'none';
+    return;
+  }
+  
+  const discordToggle = document.getElementById('toggle-discord');
+  const discordStatusBadge = document.getElementById('discord-status-badge');
+  const discordStatusText = document.getElementById('discord-status-text');
+  const previewDetails = document.getElementById('discord-preview-details');
+  const previewState = document.getElementById('discord-preview-state');
+  const previewTime = document.getElementById('discord-preview-time');
+  
+  let sessionStartTime = null;
+  
+  const savedEnabled = localStorage.getItem('cultiva-discord-enabled') !== 'false';
+  if (discordToggle) discordToggle.checked = savedEnabled;
+  
+  async function checkDiscordStatus() {
+    if (!window.discord) return;
+    
+    try {
+      const status = await window.discord.getStatus();
+      const enabled = discordToggle?.checked || false;
+      const t = currentT;
+      
+      if (status.connected && enabled) {
+        discordStatusBadge.textContent = '●';
+        discordStatusBadge.style.color = '#4caf50';
+        discordStatusText.textContent = t.discordConnected || 'Connected';
+        if (!sessionStartTime) sessionStartTime = new Date();
+      } else if (status.connected && !enabled) {
+        discordStatusBadge.textContent = '○';
+        discordStatusBadge.style.color = '#ff9500';
+        discordStatusText.textContent = t.discordDisabled || 'Disabled';
+        sessionStartTime = null;
+      } else {
+        discordStatusBadge.textContent = '○';
+        discordStatusBadge.style.color = 'var(--text-tertiary)';
+        discordStatusText.textContent = t.discordDisconnected || 'Disconnected';
+        sessionStartTime = null;
+      }
+    } catch (err) {
+      console.warn('[Discord] Status check failed:', err);
+      discordStatusBadge.textContent = '○';
+      discordStatusBadge.style.color = 'var(--text-tertiary)';
+      discordStatusText.textContent = 'Unavailable';
+      sessionStartTime = null;
+    }
+  }
+  
+  function updatePreviewTime() {
+    if (!previewTime || !sessionStartTime) return;
+    
+    const elapsed = Math.floor((new Date() - sessionStartTime) / 1000);
+    const hours = Math.floor(elapsed / 3600);
+    const minutes = Math.floor((elapsed % 3600) / 60);
+    const seconds = elapsed % 60;
+    
+    if (hours > 0) {
+      previewTime.textContent = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} elapsed`;
+    } else {
+      previewTime.textContent = `${minutes}:${seconds.toString().padStart(2, '0')} elapsed`;
+    }
+  }
+  
+  function updatePreviewText(details, state) {
+    if (previewDetails) previewDetails.textContent = details || 'In the garden';
+    if (previewState) previewState.textContent = state || 'Growing habits';
+  }
+  
+  function detectCurrentPage() {
+    const url = window.location.href;
+    if (url.includes('/calendar')) return 'calendar';
+    if (url.includes('/pages/')) return 'pages';
+    if (url.includes('settings')) return 'settings';
+    if (url.includes('stats')) return 'stats';
+    if (url.includes('trophy')) return 'trophy';
+    return 'garden';
+  }
+  
+  if (discordToggle) {
+    discordToggle.addEventListener('change', async (e) => {
+      const enabled = e.target.checked;
+      localStorage.setItem('cultiva-discord-enabled', enabled);
+      
+      if (window.discord) {
+        if (enabled) {
+          await window.discord.enable();
+          sessionStartTime = new Date();
+          const page = detectCurrentPage();
+          const locale = settings.lang || 'en';
+          await window.discord.updateActivity({ page, locale });
+          updatePreviewText(getPageDetails(page, locale), getPageState(page, locale));
+        } else {
+          await window.discord.disable();
+          sessionStartTime = null;
+          updatePreviewText('Rich Presence', 'Disabled');
+          if (previewTime) previewTime.textContent = '--:--';
+        }
+        await checkDiscordStatus();
+      }
+    });
+  }
+  
+  setInterval(() => {
+    if (discordContent?.classList.contains('active')) {
+      checkDiscordStatus();
+      updatePreviewTime();
+    }
+  }, 2000);
+  
+  const discordSidebarItem = document.querySelector('[data-section="discord"]');
+  if (discordSidebarItem) {
+    discordSidebarItem.addEventListener('click', () => {
+      checkDiscordStatus();
+      if (discordToggle?.checked) {
+        sessionStartTime = new Date();
+        const page = detectCurrentPage();
+        const locale = settings.lang || 'en';
+        updatePreviewText(getPageDetails(page, locale), getPageState(page, locale));
+      }
+    });
+  }
+  
+  window.updateDiscordPreview = updatePreviewText;
+  window.checkDiscordStatus = checkDiscordStatus;
+}
+
+function getPageDetails(page, locale) {
+  const strings = {
+    en: { garden: 'In the garden', calendar: 'Planning habits', stats: 'Reviewing progress', settings: 'Customizing', trophy: 'Trophy Garden', focus: 'Focus Mode', pages: 'Exploring Cultiva' },
+    ru: { garden: 'В саду', calendar: 'Планирует', stats: 'Анализирует', settings: 'Настраивает', trophy: 'Сад трофеев', focus: 'Режим фокуса', pages: 'Изучает Cultiva' }
+  };
+  return strings[locale]?.[page] || strings.en[page] || 'In the garden';
+}
+
+function getPageState(page, locale) {
+  const strings = {
+    en: { garden: 'Growing habits', calendar: 'Browsing calendar', stats: 'Checking statistics', settings: 'Adjusting settings', trophy: 'Admiring legacy trees', focus: 'Deep work session', pages: 'Reading documentation' },
+    ru: { garden: 'Выращивает привычки', calendar: 'Смотрит календарь', stats: 'Проверяет статистику', settings: 'Меняет параметры', trophy: 'Любуется деревьями', focus: 'Глубокая работа', pages: 'Читает документацию' }
+  };
+  return strings[locale]?.[page] || strings.en[page] || 'Growing habits';
+}
+
 /* ============================================ */
 /* INITIALIZATION                               */
 /* ============================================ */
@@ -1437,11 +1616,12 @@ async function init() {
         initAvatarPicker();
         initSettingsNavigation();
         initProfileManagement();
+        initDiscordSettings();  
         await updateAuthUI();
         updateCultivaDatePreview();
         updateProfileSection();
         
-        console.log('Cultiva [0.3.0] initialized');
+        console.log('Cultiva [0.3.1] initialized');
     } catch (err) {
         console.error('Init failed:', err);
     }

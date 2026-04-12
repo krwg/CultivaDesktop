@@ -218,6 +218,15 @@
                     </div>
                     <span class="sidebar-label" data-i18n="calendarTime">Calendar</span>
                 </div>
+
+
+
+                <div class="settings-sidebar-item" data-section="discord">
+                    <div class="sidebar-icon-wrapper">
+                        <span class="sidebar-icon"></span>
+                    </div>
+                    <span class="sidebar-label" data-i18n="discord">Discord</span>
+                </div>
                 
                 <div class="settings-sidebar-item" data-section="data">
                     <div class="sidebar-icon-wrapper">
@@ -233,7 +242,6 @@
                     <span class="sidebar-label" data-i18n="notifications">Notifications</span>
                 </div>
                 
-                <!-- НОВЫЙ РАЗДЕЛ: ОБНОВЛЕНИЯ -->
                 <div class="settings-sidebar-item settings-sidebar-disabled" data-section="updates">
                     <div class="sidebar-icon-wrapper">
                         <span class="sidebar-icon"></span>
@@ -443,6 +451,56 @@
                         <span id="cultiva-date-preview" class="cultiva-date-value">Loading...</span>
                     </div>
                 </div>
+
+                <!-- ============================================ -->
+                <!-- DISCORD SECTION (DESKTOP ONLY)                -->
+                <!-- ============================================ -->
+                <div class="settings-section-content" id="section-discord">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-label" data-i18n="discordRichPresence">Discord Rich Presence</span>
+                            <span class="setting-desc" data-i18n="discordRichPresenceDesc">Show your garden activity on Discord</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-discord" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item setting-item-static">
+                        <div class="setting-info">
+                            <span class="setting-label" data-i18n="discordStatus">Status</span>
+                            <span class="setting-desc" id="discord-status-text" data-i18n="discordChecking">Checking...</span>
+                        </div>
+                        <span class="status-badge" id="discord-status-badge">●</span>
+                    </div>
+                    
+                    <div class="settings-divider"></div>
+                    
+                    <div class="setting-item setting-item-static">
+                        <div class="setting-info">
+                            <span class="setting-label" data-i18n="discordPreview">Preview</span>
+                            <span class="setting-desc" data-i18n="discordPreviewDesc">What others see on Discord</span>
+                        </div>
+                    </div>
+                    
+                    <div class="discord-preview" style="background: var(--bg-tertiary); border-radius: 12px; padding: 20px; margin-top: 8px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img src="../dist/favicon.ico" style="width: 48px; height: 48px; border-radius: 12px;" alt="Cultiva" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #4caf50, #2196f3); display: none; align-items: center; justify-content: center; font-size: 24px;">🌱</div>
+                            <div>
+                                <div style="font-weight: 600; font-size: 14px;">Cultiva</div>
+                                <div style="font-size: 13px; color: var(--text-secondary);" id="discord-preview-details">In the garden</div>
+                                <div style="font-size: 12px; color: var(--text-tertiary);" id="discord-preview-state">Growing habits</div>
+                                <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px;" id="discord-preview-time">00:00 elapsed</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p style="font-size: 12px; color: var(--text-tertiary); margin-top: 16px; text-align: center;" data-i18n="discordMustBeRunning">
+                        Discord must be running on your computer
+                    </p>
+                </div>
                 
                 <!-- ============================================ -->
                 <!-- DATA SECTION                                 -->
@@ -477,7 +535,10 @@
                 <!-- ABOUT SECTION                                -->
                 <!-- ============================================ -->
                 <div class="settings-section-content" id="section-about">
-                    <div class="about-app-icon">🌱</div>
+<div class="about-app-icon">
+    <img src="../dist/favicon.ico" style="width: 56px; height: 56px;" alt="Cultiva" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+    <span style="display: none; font-size: 56px;">🌱</span>
+</div>
                     <div class="about-app-name">Cultiva</div>
                     <div class="about-app-version">Version [0.3.0] Sequoia</div>
                     
@@ -626,7 +687,7 @@
                 <a href="https://krwg.github.io/Cultiva/" data-i18n="dev">Dev</a>                
                 <a href="https://github.com/krwg/cultiva" target="_blank" rel="noopener">GitHub</a>
             </nav>
-            <div class="footer-brand"><span class="footer-version">[0.3.0] Sequoia Desktop</span></div>
+            <div class="footer-brand"><span class="footer-version">[0.3.1] Sequoia Desktop</span></div>
         </div>
     </footer>
 
