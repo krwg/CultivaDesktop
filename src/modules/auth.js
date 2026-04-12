@@ -24,7 +24,7 @@ function generateSalt() {
 
 export const auth = {
   init: async function() {
-    if (_currentUser) return;
+    if (_currentUser) { return; }
     try {
       const session = await db.get('sessions', SESSION_KEY);
       if (session && session.email) {
@@ -36,11 +36,11 @@ export const auth = {
   },
 
   register: async function({ email, password, name, dob }) {
-    if (!email || typeof email !== 'string') throw new Error('Invalid email');
-    if (password.length < 6) throw new Error('Password must be at least 6 characters');
+    if (!email || typeof email !== 'string') { throw new Error('Invalid email'); }
+    if (password.length < 6) { throw new Error('Password must be at least 6 characters'); }
     
     const existing = await db.get('users', email);
-    if (existing) throw new Error('User already exists');
+    if (existing) { throw new Error('User already exists'); }
 
     const salt = generateSalt();
     const passwordHash = await hashPassword(password, salt);
@@ -62,10 +62,10 @@ export const auth = {
 
   login: async function({ email, password }) {
     const user = await db.get('users', email);
-    if (!user) throw new Error('User not found');
+    if (!user) { throw new Error('User not found'); }
 
     const passwordHash = await hashPassword(password, user.salt);
-    if (user.passwordHash !== passwordHash) throw new Error('Incorrect password');
+    if (user.passwordHash !== passwordHash) { throw new Error('Incorrect password'); }
 
     const session = {
       key: SESSION_KEY,
@@ -85,7 +85,11 @@ export const auth = {
   },
 
   logout: async function() {
-    try { await db.clear('sessions'); } catch(e) {}
+    try {
+      await db.clear('sessions');
+    } catch (e) {
+      console.warn('[Auth] Session cleanup failed:', e);
+    }
     _currentUser = null;
     if (typeof storage !== 'undefined' && storage.setCurrentUser) {
       await storage.setCurrentUser(null);
@@ -101,7 +105,7 @@ export const auth = {
   },
 
   updateProfile: async function(updates) {
-    if (!_currentUser) throw new Error('Not authenticated');
+    if (!_currentUser) { throw new Error('Not authenticated'); }
     _currentUser = { ..._currentUser, ...updates };
     await db.put('users', _currentUser);
 
@@ -115,8 +119,9 @@ export const auth = {
   },
 
   _sanitizeUser: function(user) {
-    if (!user) return null;
-    const { passwordHash, salt, ...safeUser } = user;
+    if (!user) { return null; }
+
+    const { passwordHash: _passwordHash, salt: _salt, ...safeUser } = user;
     return safeUser;
   }
 };

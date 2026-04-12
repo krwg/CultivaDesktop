@@ -6,59 +6,59 @@ import { GROWTH_STAGES, LEGACY_THRESHOLD, MAX_ACTIVE_HABITS } from '../core/conf
 /* ============================================ */
 
 function getCultivaTimezone() {
-    const tz = localStorage.getItem('cultiva-timezone') || 'auto';
-    return tz === 'auto' ? undefined : tz;
+  const tz = localStorage.getItem('cultiva-timezone') || 'auto';
+  return tz === 'auto' ? undefined : tz;
 }
 
 function getTodayInTZ() {
-    const now = new Date();
-    const tz = getCultivaTimezone();
+  const now = new Date();
+  const tz = getCultivaTimezone();
     
-    if (!tz) {
-        return now.toISOString().split('T')[0];
-    }
+  if (!tz) {
+    return now.toISOString().split('T')[0];
+  }
     
-    try {
-        const formatter = new Intl.DateTimeFormat('en-CA', {
-            timeZone: tz,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
+  try {
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
         
-        const parts = formatter.formatToParts(now);
-        const year = parts.find(p => p.type === 'year').value;
-        const month = parts.find(p => p.type === 'month').value;
-        const day = parts.find(p => p.type === 'day').value;
+    const parts = formatter.formatToParts(now);
+    const year = parts.find(p => p.type === 'year').value;
+    const month = parts.find(p => p.type === 'month').value;
+    const day = parts.find(p => p.type === 'day').value;
         
-        return `${year}-${month}-${day}`;
-    } catch (e) {
-        console.warn('[Habits] Failed to get date with timezone, using local:', e);
-        return now.toISOString().split('T')[0];
-    }
+    return `${year}-${month}-${day}`;
+  } catch (e) {
+    console.warn('[Habits] Failed to get date with timezone, using local:', e);
+    return now.toISOString().split('T')[0];
+  }
 }
 
 function getDateInTZ(date) {
-    const tz = getCultivaTimezone();
-    if (!tz) return date.toISOString().split('T')[0];
+  const tz = getCultivaTimezone();
+  if (!tz) {return date.toISOString().split('T')[0];}
     
-    try {
-        const formatter = new Intl.DateTimeFormat('en-CA', {
-            timeZone: tz,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
+  try {
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
         
-        const parts = formatter.formatToParts(date);
-        const year = parts.find(p => p.type === 'year').value;
-        const month = parts.find(p => p.type === 'month').value;
-        const day = parts.find(p => p.type === 'day').value;
+    const parts = formatter.formatToParts(date);
+    const year = parts.find(p => p.type === 'year').value;
+    const month = parts.find(p => p.type === 'month').value;
+    const day = parts.find(p => p.type === 'day').value;
         
-        return `${year}-${month}-${day}`;
-    } catch (e) {
-        return date.toISOString().split('T')[0];
-    }
+    return `${year}-${month}-${day}`;
+  } catch (e) {
+    return date.toISOString().split('T')[0];
+  }
 }
 
 /* ============================================ */
@@ -108,7 +108,7 @@ export const habits = {
   toggle(id, amount = null) {
     const allHabits = this.getAll();
     const habit = allHabits.find(h => h.id === id);
-    if (!habit) return null;
+    if (!habit) {return null;}
     
     const today = getTodayInTZ();
     const yesterday = new Date();
@@ -127,7 +127,7 @@ export const habits = {
       if (isCompleted && !wasCompleted) {
         habit.progress++;
         habit.lastCompleted = today;
-        if (!habit.history.includes(today)) habit.history.push(today);
+        if (!habit.history.includes(today)) {habit.history.push(today);}
       } else if (!isCompleted && wasCompleted) {
         habit.progress = Math.max(0, habit.progress - 1);
         habit.lastCompleted = null;
@@ -143,7 +143,7 @@ export const habits = {
       } else {
         habit.progress++;
         habit.lastCompleted = today;
-        if (!habit.history.includes(today)) habit.history.push(today);
+        if (!habit.history.includes(today)) {habit.history.push(today);}
       }
       
       this._recalculateStreaks(habit);
@@ -159,7 +159,7 @@ export const habits = {
     const sortedHistory = [...new Set(history)].sort();
     
     let currentStreak = 0;
-    let checkDate = new Date();
+    const checkDate = new Date();
     const tz = getCultivaTimezone();
     
     while (true) {
@@ -222,16 +222,16 @@ export const habits = {
   },
 
   getStage(progress) {
-    for (let key in GROWTH_STAGES) {
+    for (const key in GROWTH_STAGES) {
       const stage = GROWTH_STAGES[key];
-      if (progress >= stage.min && progress <= stage.max) return stage;
+      if (progress >= stage.min && progress <= stage.max) {return stage;}
     }
     return GROWTH_STAGES.SEED;
   },
 
   getStats(id) {
     const h = this.getAll().find(x => x.id === id);
-    if (!h) return null;
+    if (!h) {return null;}
 
     const today = getTodayInTZ();
     const startDate = h.startDate || today;
@@ -255,7 +255,7 @@ export const habits = {
 
   getCalendarData(id) {
     const h = this.getAll().find(x => x.id === id);
-    if (!h) return [];
+    if (!h) {return [];}
     
     const today = new Date();
     const start = new Date();

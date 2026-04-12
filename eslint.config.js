@@ -1,0 +1,60 @@
+
+import js from '@eslint/js';
+import globals from 'globals';
+
+export default [
+  js.configs.recommended,
+  
+  {
+    files: ['src/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        ...globals.browser,
+        ...globals.es2022,
+
+        storage: 'readonly',
+        habits: 'readonly',
+        auth: 'readonly',
+        db: 'readonly',
+        GROWTH_STAGES: 'readonly',
+        LEGACY_THRESHOLD: 'readonly',
+        MAX_ACTIVE_HABITS: 'readonly',
+      },
+    },
+  },
+  
+  {
+    files: ['electron/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'commonjs',
+      globals: {
+        ...globals.node,
+        ...globals.browser,
+      },
+    },
+  },
+  
+  {
+    rules: {
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      'no-console': 'warn',
+      'prefer-const': 'error',
+      'eqeqeq': ['error', 'always'],
+      'curly': ['error', 'all'],
+      'semi': ['error', 'always'],
+      'quotes': ['error', 'single', { avoidEscape: true }],
+      'indent': ['error', 2, { SwitchCase: 1 }],
+      'no-var': 'error',
+      'no-debugger': 'warn',
+      'no-alert': 'warn',
+      'no-implicit-globals': 'error',
+    },
+  },
+  
+  {
+    ignores: ['dist/**', 'release/**', 'node_modules/**', 'vite.config.js'],
+  },
+];

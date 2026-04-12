@@ -51,7 +51,7 @@ function migrateHabit(habit) {
   if (migrated.streak !== undefined && migrated.currentStreak === undefined) {
     migrated.currentStreak = migrated.streak;
   }
-    if (migrated.currentStreak === undefined) {
+  if (migrated.currentStreak === undefined) {
     migrated.currentStreak = 0;
   }
   
@@ -98,17 +98,17 @@ export const storage = {
     console.log('[Storage] Initializing...');
     
     try {
-        const session = await db.get('sessions', SESSION_KEY);
-        if (session && session.email) {
-            _currentUserId = session.email;
-            console.log('[Storage] Restored session for:', _currentUserId);
-        } else {
-            _currentUserId = null;
-            console.log('[Storage] No active session, running as guest');
-        }
-    } catch (e) {
-        console.error('[Storage] Session check failed:', e);
+      const session = await db.get('sessions', SESSION_KEY);
+      if (session && session.email) {
+        _currentUserId = session.email;
+        console.log('[Storage] Restored session for:', _currentUserId);
+      } else {
         _currentUserId = null;
+        console.log('[Storage] No active session, running as guest');
+      }
+    } catch (e) {
+      console.error('[Storage] Session check failed:', e);
+      _currentUserId = null;
     }
 
     await this._loadFromDB();
@@ -124,8 +124,8 @@ export const storage = {
     });
     
     if (needsSave) {
-        console.log('[Storage] Applying habit migration...');
-        await this._forceSaveHabits(_habitsCache);
+      console.log('[Storage] Applying habit migration...');
+      await this._forceSaveHabits(_habitsCache);
     }
     
 

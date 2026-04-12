@@ -39,7 +39,7 @@ const DISCORD_STRINGS = {
 };
 
 function initDiscordRPC() {
-  if (rpc) return;
+  if (rpc) {return;}
   
   rpc = new Client({ transport: 'ipc' });
   
@@ -69,7 +69,7 @@ function initDiscordRPC() {
 }
 
 function updateDiscordActivity(activityData = {}) {
-  if (!rpcReady || !rpc || !discordEnabled) return;
+  if (!rpcReady || !rpc || !discordEnabled) {return;}
   
   const locale = activityData.locale || currentLocale;
   const strings = DISCORD_STRINGS[locale] || DISCORD_STRINGS.en;
@@ -94,7 +94,7 @@ function updateDiscordActivity(activityData = {}) {
 }
 
 function clearDiscordActivity() {
-  if (!rpcReady || !rpc) return;
+  if (!rpcReady || !rpc) {return;}
   
   rpc.clearActivity().catch(err => {
     console.warn('[Discord] Failed to clear activity:', err.message);
@@ -115,12 +115,12 @@ function shutdownDiscordRPC() {
 }
 
 function detectPageFromUrl(url) {
-  if (url.includes('/calendar')) return 'calendar';
-  if (url.includes('/pages/')) return 'pages';
-  if (url.includes('settings') || url.includes('settings-modal')) return 'settings';
-  if (url.includes('stats')) return 'stats';
-  if (url.includes('trophy')) return 'trophy';
-  if (url.includes('focus')) return 'focus';
+  if (url.includes('/calendar')) {return 'calendar';}
+  if (url.includes('/pages/')) {return 'pages';}
+  if (url.includes('settings') || url.includes('settings-modal')) {return 'settings';}
+  if (url.includes('stats')) {return 'stats';}
+  if (url.includes('trophy')) {return 'trophy';}
+  if (url.includes('focus')) {return 'focus';}
   return 'garden';
 }
 
@@ -288,7 +288,7 @@ ipcMain.handle('save-file', async (event, data, fileName) => {
 });
 
 ipcMain.handle('navigate-to', (event, page) => {
-  if (!mainWindow) return { success: false };
+  if (!mainWindow) {return { success: false };}
   
   const pagePath = path.join(__dirname, '../dist', page);
   console.log('[Electron] Navigating to:', pagePath);
@@ -387,13 +387,13 @@ app.whenReady().then(() => {
   createWindow();
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {createWindow();}
   });
 });
 
 app.on('window-all-closed', () => {
   shutdownDiscordRPC();
-  if (process.platform !== 'darwin') app.quit();
+  if (process.platform !== 'darwin') {app.quit();}
 });
 
 app.on('before-quit', () => {

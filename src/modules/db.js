@@ -11,7 +11,6 @@ export const db = {
         const db = e.target.result;
         const oldVersion = e.oldVersion || 0;
 
-        // Безопасное создание хранилищ без удаления существующих данных
         if (!db.objectStoreNames.contains('habits')) {
           const store = db.createObjectStore('habits', { keyPath: 'id' });
           store.createIndex('userId', 'userId', { unique: false });
@@ -19,13 +18,13 @@ export const db = {
         } else if (oldVersion < 5) {
           const tx = db.transaction('habits', 'readwrite');
           const habitsStore = tx.objectStore('habits');
-          if (!habitsStore.indexNames.contains('userId')) habitsStore.createIndex('userId', 'userId', { unique: false });
-          if (!habitsStore.indexNames.contains('updatedAt')) habitsStore.createIndex('updatedAt', 'updatedAt', { unique: false });
+          if (!habitsStore.indexNames.contains('userId')) { habitsStore.createIndex('userId', 'userId', { unique: false }); }
+          if (!habitsStore.indexNames.contains('updatedAt')) { habitsStore.createIndex('updatedAt', 'updatedAt', { unique: false }); }
         }
 
-        if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'key' });
-        if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'email' });
-        if (!db.objectStoreNames.contains('sessions')) db.createObjectStore('sessions', { keyPath: 'key' });
+        if (!db.objectStoreNames.contains('settings')) { db.createObjectStore('settings', { keyPath: 'key' }); }
+        if (!db.objectStoreNames.contains('users')) { db.createObjectStore('users', { keyPath: 'email' }); }
+        if (!db.objectStoreNames.contains('sessions')) { db.createObjectStore('sessions', { keyPath: 'key' }); }
 
         console.log(`[DB] Upgraded from v${oldVersion} to v${DB_VERSION} safely`);
       };
@@ -55,7 +54,7 @@ export const db = {
   },
 
   async get(storeName, key) {
-    if (!key) return null;
+    if (!key) { return null; }
     const db = await this.open();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(storeName, 'readonly');
@@ -78,10 +77,10 @@ export const db = {
 
       const index = store.index(indexName);
 
-      if (value == null) {
+      if (value === null || value === undefined) {
         index.getAll().onsuccess = (e) => {
           const all = e.target.result || [];
-          resolve(all.filter(item => item[indexName] == null));
+          resolve(all.filter(item => item[indexName] === null || item[indexName] === undefined));
         };
         return;
       }
@@ -103,19 +102,27 @@ export const db = {
   },
 
   async deleteByIndex(storeName, indexName, value) {
-    if (value == null) return Promise.resolve();
+    if (value === null || value === undefined) { return Promise.resolve(); }
+    
     const db = await this.open();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(storeName, 'readwrite');
       const store = tx.objectStore(storeName);
       
-      if (!store.indexNames.contains(indexName)) { reject(new Error('Index not found')); return; }
+      if (!store.indexNames.contains(indexName)) { 
+        reject(new Error('Index not found')); 
+        return; 
+      }
       
       const cursorReq = store.index(indexName).openCursor(IDBKeyRange.only(value));
       cursorReq.onsuccess = (e) => {
         const cursor = e.target.result;
-        if (cursor) { cursor.delete(); cursor.continue(); }
-        else resolve();
+        if (cursor) { 
+          cursor.delete(); 
+          cursor.continue(); 
+        } else { 
+          resolve(); 
+        }
       };
       cursorReq.onerror = (e) => reject(e.target.error);
     });
