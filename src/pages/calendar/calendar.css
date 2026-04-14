@@ -538,25 +538,29 @@
 /* ============================================ */
 
 .all-day-section {
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border-light);
-    margin-bottom: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  border-left: 4px solid var(--accent-green);
 }
 
 .all-day-event {
-    display: inline-block;
-    padding: 6px 12px;
-    margin: 4px 4px 4px 0;
-    border-radius: 20px;
-    color: white;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s var(--ease-apple);
+  display: inline-block;
+  padding: 6px 12px;
+  margin: 4px 6px 4px 0;
+  border-radius: 20px;
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s var(--ease-apple);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .all-day-event:hover {
-    transform: scale(1.02);
+  transform: scale(1.02);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 /* ============================================ */
@@ -709,7 +713,6 @@
     50% { opacity: 1; transform: scale(1.5); }
 }
 
-/* Apply backgrounds */
 body.with-bg-aurora .calendar-grid,
 body.with-bg-rainfall .calendar-grid,
 body.with-bg-starlight .calendar-grid,
@@ -725,4 +728,88 @@ body.with-bg-aurora .calendar-body,
 body.with-bg-rainfall .calendar-body,
 body.with-bg-starlight .calendar-body {
     background: transparent;
+}
+
+.month-day.has-holiday {
+  position: relative;
+}
+
+.month-day.has-holiday::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background: linear-gradient(135deg, #ff9500, #ffcc00);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(255, 149, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 2;
+}
+
+.month-day.today.has-holiday::before,
+.month-day.selected.has-holiday::before {
+  background: linear-gradient(135deg, #ffffff, #ffe0b0);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+
+.month-events {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  margin-top: 4px;
+  width: 100%;
+}
+
+.month-event-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+}
+
+.day-slot {
+  position: relative;
+  min-height: 60px;
+}
+
+.day-event {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: white;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.timeline-slot {
+  position: relative;
+  min-height: 56px;
+}
+
+.week-event {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: white;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.holiday-banner {
+    margin-top: 8px;
+    padding: 6px 16px;
+    background: linear-gradient(135deg, rgba(255, 149, 0, 0.15), rgba(255, 204, 0, 0.1));
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #ff9500;
+    display: inline-block;
+    border: 1px solid rgba(255, 149, 0, 0.3);
 }

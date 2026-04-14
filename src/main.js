@@ -60,7 +60,7 @@ function getTodayStr() {
   }
 }
 
-function formatCultivaDate(dateObj) {
+function _formatCultivaDate(dateObj) {
   const tz = getCultivaTimezone();
   return new Intl.DateTimeFormat(navigator.language, {
     year: 'numeric', month: '2-digit', day: '2-digit',
@@ -68,7 +68,7 @@ function formatCultivaDate(dateObj) {
   }).format(dateObj);
 }
 
-function getLocalISOString(dateObj) {
+function _getLocalISOString(dateObj) {
   const tz = getCultivaTimezone();
   const parts = new Intl.DateTimeFormat('en-CA', { 
     timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' 
@@ -163,18 +163,18 @@ async function loadSettings() {
         
     if (!saved) {
       const ls = localStorage.getItem('cultiva-settings');
-      if (ls) {saved = JSON.parse(ls);}
+      if (ls) { saved = JSON.parse(ls); }
     }
         
     console.log('Loaded settings:', saved);
         
     if (saved && typeof saved === 'object') {
-      if (saved.lang) {settings.lang = saved.lang;}
-      if (saved.theme) {settings.theme = saved.theme;}  
-      if (typeof saved.showTrophies === 'boolean') {settings.showTrophies = saved.showTrophies;}
-      if (typeof saved.focusMode === 'boolean') {settings.focusMode = saved.focusMode;}
-      if (saved.holidayRegion) {settings.holidayRegion = saved.holidayRegion;}
-      if (saved.avatar) {settings.avatar = { ...settings.avatar, ...saved.avatar };}
+      if (saved.lang) { settings.lang = saved.lang; }
+      if (saved.theme) { settings.theme = saved.theme; }  
+      if (typeof saved.showTrophies === 'boolean') { settings.showTrophies = saved.showTrophies; }
+      if (typeof saved.focusMode === 'boolean') { settings.focusMode = saved.focusMode; }
+      if (saved.holidayRegion) { settings.holidayRegion = saved.holidayRegion; }
+      if (saved.avatar) { settings.avatar = { ...settings.avatar, ...saved.avatar }; }
     }
         
     currentLang = settings.lang;
@@ -191,6 +191,7 @@ function saveSettings() {
   localStorage.setItem('cultiva-settings', JSON.stringify(settings));
   localStorage.setItem('cultiva-lang', settings.lang);
   localStorage.setItem('cultiva-theme', settings.theme);
+  localStorage.setItem('cultiva-holiday-region', settings.holidayRegion || 'us'); 
     
   currentLang = settings.lang;
   currentT = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
@@ -199,10 +200,16 @@ function saveSettings() {
     
   applySettings();
   renderGarden();
-} 
+}
+
+function handleHolidayChange(e) {
+  settings.holidayRegion = e.target.value;
+  localStorage.setItem('cultiva-holiday-region', e.target.value);
+  saveSettings();
+}
 
 function applySettings() {
-  if (langSelect) {langSelect.value = settings.lang;}
+  if (langSelect) { langSelect.value = settings.lang; }
   applyTranslations(settings.lang);
     
   document.body.classList.remove(
@@ -219,16 +226,20 @@ function applySettings() {
     
   document.body.classList.add(`theme-${appliedTheme}`);
     
-  if (themeSelect) {themeSelect.value = settings.theme;}
+  if (themeSelect) { themeSelect.value = settings.theme; }
     
   const trophySection = document.getElementById('trophy-section');
-  if (trophySection) {trophySection.classList.toggle('hidden', !settings.showTrophies);}
-  if (trophyToggle) {trophyToggle.checked = settings.showTrophies;}
+  if (trophySection) { trophySection.classList.toggle('hidden', !settings.showTrophies); }
+  if (trophyToggle) { trophyToggle.checked = settings.showTrophies; }
   document.body.classList.toggle('focus-mode', settings.focusMode);
-  if (focusToggle) {focusToggle.checked = settings.focusMode;}
+  if (focusToggle) { focusToggle.checked = settings.focusMode; }
     
   const holidaySelect = document.getElementById('holiday-select');
-  if (holidaySelect) {holidaySelect.value = settings.holidayRegion || 'us';}
+  if (holidaySelect) {
+    holidaySelect.value = settings.holidayRegion || 'us';
+    holidaySelect.removeEventListener('change', handleHolidayChange);
+    holidaySelect.addEventListener('change', handleHolidayChange);
+  }
     
   renderHeaderAvatar();
 }
@@ -274,10 +285,10 @@ function applyTranslations(lang) {
     
   document.querySelectorAll('.habit-card .btn-card-primary').forEach(btn => {
     const card = btn.closest('.habit-card');
-    if (!card) {return;}
+    if (!card) { return; }
     const id = card.dataset.id;
     const habit = habits.getAll().find(h => h.id === id);
-    if (!habit) {return;}
+    if (!habit) { return; }
         
     const isCompleted = habit.trackType === 'binary' 
       ? habit.lastCompleted === today 
@@ -291,7 +302,7 @@ function applyTranslations(lang) {
   });
     
   const doneBtn = document.getElementById('close-stats');
-  if (doneBtn) {doneBtn.textContent = t.done || 'Done';}
+  if (doneBtn) { doneBtn.textContent = t.done || 'Done'; }
     
   document.querySelectorAll('[data-i18n-category]').forEach(el => {
     const cat = el.dataset.i18nCategory;
@@ -310,14 +321,6 @@ themeSelect?.addEventListener('change', (e) => { settings.theme = e.target.value
 trophyToggle?.addEventListener('change', (e) => { settings.showTrophies = e.target.checked; saveSettings(); });
 focusToggle?.addEventListener('change', (e) => { settings.focusMode = e.target.checked; saveSettings(); });
 
-const holidaySelect = document.getElementById('holiday-select');
-if (holidaySelect) {
-  holidaySelect.addEventListener('change', (e) => {
-    settings.holidayRegion = e.target.value;
-    saveSettings();
-  });
-}
-
 /* ============================================ */
 /* TIMEZONE SETTING                             */
 /* ============================================ */
@@ -327,7 +330,7 @@ if (tzSelect) {
   tzSelect.value = localStorage.getItem('cultiva-timezone') || 'auto';
   tzSelect.addEventListener('change', (e) => {
     localStorage.setItem('cultiva-timezone', e.target.value);
-    if (typeof renderGarden === 'function') {renderGarden();} 
+    if (typeof renderGarden === 'function') { renderGarden(); } 
   });
 }
 
@@ -341,7 +344,7 @@ if (timeFormatSelect) {
 
 function updateCultivaDatePreview() {
   const preview = document.getElementById('cultiva-date-preview');
-  if (!preview) {return;}
+  if (!preview) { return; }
     
   const tz = getCultivaTimezone();
   const now = new Date();
@@ -357,7 +360,7 @@ if (tzSelect) {
   tzSelect.addEventListener('change', () => {
     localStorage.setItem('cultiva-timezone', tzSelect.value);
     updateCultivaDatePreview();
-    if (typeof renderGarden === 'function') {renderGarden();}
+    if (typeof renderGarden === 'function') { renderGarden(); }
   });
 }
 
@@ -375,7 +378,7 @@ const bgContainers = {
 };
 
 const savedBg = localStorage.getItem('cultiva-background') || 'none';
-if (bgSelect) {bgSelect.value = savedBg;}
+if (bgSelect) { bgSelect.value = savedBg; }
 applyBackground(savedBg);
 
 bgSelect?.addEventListener('change', (e) => {
@@ -385,23 +388,23 @@ bgSelect?.addEventListener('change', (e) => {
 });
 
 function applyBackground(bg) {
-  Object.values(bgContainers).forEach(el => { if (el) {el.style.display = 'none';} });
+  Object.values(bgContainers).forEach(el => { if (el) { el.style.display = 'none'; } });
   document.body.classList.remove(
     'with-bg-aurora', 'with-bg-rainfall', 'with-bg-starlight',
     'with-bg-snowfall', 'with-bg-fireflies'
   );
     
-  if (bg === 'none') {return;}
+  if (bg === 'none') { return; }
     
   const container = bgContainers[bg];
   if (container) {
     container.style.display = 'block';
     document.body.classList.add(`with-bg-${bg}`);
         
-    if (bg === 'rainfall') {generateRaindrops(container);}
-    if (bg === 'starlight') {generateStars(container);}
-    if (bg === 'snowfall') {generateSnowflakes(container);}
-    if (bg === 'fireflies') {generateFireflies(container);}
+    if (bg === 'rainfall') { generateRaindrops(container); }
+    if (bg === 'starlight') { generateStars(container); }
+    if (bg === 'snowfall') { generateSnowflakes(container); }
+    if (bg === 'fireflies') { generateFireflies(container); }
   }
 }
 
@@ -466,7 +469,7 @@ function initSettingsNavigation() {
   const sidebarItems = document.querySelectorAll('.settings-sidebar-item[data-section]');
   const emptyState = document.getElementById('settings-empty');
     
-  if (!sidebarItems.length) {return;}
+  if (!sidebarItems.length) { return; }
     
   sidebarItems.forEach(item => {
     item.addEventListener('click', () => {
@@ -480,16 +483,16 @@ function initSettingsNavigation() {
       sidebarItems.forEach(i => i.classList.remove('active'));
       item.classList.add('active');
             
-      if (emptyState) {emptyState.style.display = 'none';}
+      if (emptyState) { emptyState.style.display = 'none'; }
             
       document.querySelectorAll('.settings-section-content').forEach(content => {
         content.classList.remove('active');
       });
             
       const targetSection = document.getElementById(`section-${section}`);
-      if (targetSection) {targetSection.classList.add('active');}
+      if (targetSection) { targetSection.classList.add('active'); }
             
-      if (section === 'profile') {updateProfileSection();}
+      if (section === 'profile') { updateProfileSection(); }
     });
   });
     
@@ -512,7 +515,7 @@ function initSettingsNavigation() {
         document.querySelectorAll('.settings-section-content').forEach(c => c.classList.remove('active'));
         document.getElementById('section-profile')?.classList.add('active');
                 
-        if (emptyState) {emptyState.style.display = 'none';}
+        if (emptyState) { emptyState.style.display = 'none'; }
       }
     }, 300);
   });
@@ -540,10 +543,10 @@ function updateProfileSection() {
   if (avatarContainer) {
     if (settings.avatar?.photo) {
       if (avatarImg) { avatarImg.src = settings.avatar.photo; avatarImg.style.display = 'block'; }
-      if (avatarEmoji) {avatarEmoji.style.display = 'none';}
+      if (avatarEmoji) { avatarEmoji.style.display = 'none'; }
       avatarContainer.style.background = 'transparent';
     } else {
-      if (avatarImg) {avatarImg.style.display = 'none';}
+      if (avatarImg) { avatarImg.style.display = 'none'; }
       if (avatarEmoji) { avatarEmoji.style.display = 'flex'; avatarEmoji.textContent = settings.avatar?.emoji || '🌱'; }
             
       const bg = AVATAR_DATA.backgrounds.find(b => b.id === settings.avatar?.background);
@@ -555,38 +558,38 @@ function updateProfileSection() {
   const profileEmail = document.getElementById('settings-profile-email');
     
   if (isLoggedIn && user) {
-    if (profileName) {profileName.textContent = user.name || user.email?.split('@')[0] || 'User';}
-    if (profileEmail) {profileEmail.textContent = user.email || '';}
+    if (profileName) { profileName.textContent = user.name || user.email?.split('@')[0] || 'User'; }
+    if (profileEmail) { profileEmail.textContent = user.email || ''; }
   } else {
-    if (profileName) {profileName.textContent = t.guestUser || 'Guest User';}
-    if (profileEmail) {profileEmail.textContent = t.localStorage || 'Local Storage';}
+    if (profileName) { profileName.textContent = t.guestUser || 'Guest User'; }
+    if (profileEmail) { profileEmail.textContent = t.localStorage || 'Local Storage'; }
   }
     
   const accountStatus = document.getElementById('profile-account-status');
   const statusBadge = document.getElementById('profile-status-badge');
     
   if (isLoggedIn) {
-    if (accountStatus) {accountStatus.textContent = t.accountActive || 'Account Active';}
+    if (accountStatus) { accountStatus.textContent = t.accountActive || 'Account Active'; }
     if (statusBadge) { statusBadge.textContent = t.active || 'Active'; statusBadge.classList.add('online'); }
   } else {
-    if (accountStatus) {accountStatus.textContent = t.localStorageMode || 'Local Storage Mode';}
+    if (accountStatus) { accountStatus.textContent = t.localStorageMode || 'Local Storage Mode'; }
     if (statusBadge) { statusBadge.textContent = t.guest || 'Guest'; statusBadge.classList.remove('online'); }
   }
     
   const editProfileBtn = document.getElementById('settings-edit-profile');
-  if (editProfileBtn) {editProfileBtn.style.display = isLoggedIn ? 'flex' : 'none';}
+  if (editProfileBtn) { editProfileBtn.style.display = isLoggedIn ? 'flex' : 'none'; }
     
   const memberSinceRow = document.getElementById('profile-member-since');
   const memberDate = document.getElementById('profile-member-date');
     
   if (isLoggedIn && user?.createdAt) {
-    if (memberSinceRow) {memberSinceRow.style.display = 'flex';}
+    if (memberSinceRow) { memberSinceRow.style.display = 'flex'; }
     if (memberDate) {
       const date = new Date(user.createdAt);
       memberDate.textContent = date.toLocaleDateString(currentLang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     }
   } else {
-    if (memberSinceRow) {memberSinceRow.style.display = 'none';}
+    if (memberSinceRow) { memberSinceRow.style.display = 'none'; }
   }
 }
 
@@ -597,14 +600,14 @@ const editProfileError = document.getElementById('edit-profile-error');
 function initProfileManagement() {
   document.getElementById('settings-edit-profile')?.addEventListener('click', () => {
     const user = auth.getCurrentUser();
-    if (!user) {return;}
+    if (!user) { return; }
         
     document.getElementById('edit-display-name').value = user.name || '';
     document.getElementById('edit-email').value = user.email || '';
     document.getElementById('edit-dob').value = user.dob || '';
     document.getElementById('edit-new-password').value = '';
     document.getElementById('edit-confirm-password').value = '';
-    if (editProfileError) {editProfileError.style.display = 'none';}
+    if (editProfileError) { editProfileError.style.display = 'none'; }
         
     closeModal(settingsModal);
     setTimeout(() => openModal(editProfileModal), 300);
@@ -627,7 +630,7 @@ function initProfileManagement() {
     
   editProfileForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (editProfileError) {editProfileError.style.display = 'none';}
+    if (editProfileError) { editProfileError.style.display = 'none'; }
         
     const displayName = document.getElementById('edit-display-name').value.trim();
     const email = document.getElementById('edit-email').value.trim();
@@ -642,7 +645,7 @@ function initProfileManagement() {
         
     try {
       const updates = { name: displayName, email: email, dob: dob || null };
-      if (newPassword) {updates.password = newPassword;}
+      if (newPassword) { updates.password = newPassword; }
             
       await auth.updateProfile(updates);
       await updateAuthUI();
@@ -677,13 +680,15 @@ function toggleUserMenu() {
   const isActive = userDropdown.classList.toggle('active');
   userMenuBtn.setAttribute('aria-expanded', isActive);
 }
+
 function closeUserMenu() {
   userDropdown.classList.remove('active');
   userMenuBtn.setAttribute('aria-expanded', 'false');
 }
+
 userMenuBtn?.addEventListener('click', (e) => { e.stopPropagation(); toggleUserMenu(); });
 document.addEventListener('click', (e) => {
-  if (userDropdown && !userDropdown.contains(e.target) && !userMenuBtn.contains(e.target)) {closeUserMenu();}
+  if (userDropdown && !userDropdown.contains(e.target) && !userMenuBtn.contains(e.target)) { closeUserMenu(); }
 });
 document.getElementById('open-settings')?.addEventListener('click', () => { openModal(settingsModal); closeUserMenu(); });
 
@@ -694,22 +699,22 @@ document.getElementById('open-settings')?.addEventListener('click', () => { open
 function renderHeaderAvatar() {
   const headerAvatar = document.getElementById('header-avatar');
   const headerEmoji = document.getElementById('header-avatar-emoji');
-  if (!headerAvatar) {return;}
+  if (!headerAvatar) { return; }
   const existingImg = headerAvatar.querySelector('img');
-  if (existingImg) {existingImg.remove();}
+  if (existingImg) { existingImg.remove(); }
   if (settings.avatar.photo) {
     const img = document.createElement('img');
     img.src = settings.avatar.photo;
     img.style.cssText = 'width:100%; height:100%; object-fit:cover; border-radius:50%;';
     headerAvatar.appendChild(img);
     headerAvatar.classList.add('has-photo');
-    if (headerEmoji) {headerEmoji.style.display = 'none';}
+    if (headerEmoji) { headerEmoji.style.display = 'none'; }
     headerAvatar.style.backgroundImage = 'none';
     headerAvatar.style.backgroundColor = 'transparent';
     return;
   }
   headerAvatar.classList.remove('has-photo');
-  if (headerEmoji) {headerEmoji.style.display = '';}
+  if (headerEmoji) { headerEmoji.style.display = ''; }
   const bg = AVATAR_DATA.backgrounds.find(b => b.id === settings.avatar.background);
   if (bg && bg.id !== 'none') {
     headerAvatar.style.backgroundImage = bg.css;
@@ -718,7 +723,7 @@ function renderHeaderAvatar() {
     headerAvatar.style.backgroundImage = 'none';
     headerAvatar.style.backgroundColor = 'var(--bg-tertiary)';
   }
-  if (headerEmoji) {headerEmoji.textContent = settings.avatar.emoji;}
+  if (headerEmoji) { headerEmoji.textContent = settings.avatar.emoji; }
 }
 
 function renderAvatarPicker() {
@@ -728,18 +733,18 @@ function renderAvatarPicker() {
   const previewEmoji = document.getElementById('preview-emoji');
   const previewImage = document.getElementById('preview-image');
   const clearPhotoBtn = document.getElementById('avatar-clear-photo');
-  if (!bgGrid || !emojiGrid) {return;}
+  if (!bgGrid || !emojiGrid) { return; }
   if (tempAvatar.photo) {
     preview.classList.add('has-photo');
     previewImage.src = tempAvatar.photo;
     previewImage.style.display = 'block';
     previewEmoji.style.display = 'none';
-    if (clearPhotoBtn) {clearPhotoBtn.style.display = 'inline-block';}
+    if (clearPhotoBtn) { clearPhotoBtn.style.display = 'inline-block'; }
   } else {
     preview.classList.remove('has-photo');
-    if (previewImage) {previewImage.style.display = 'none';}
-    if (previewEmoji) {previewEmoji.style.display = '';}
-    if (clearPhotoBtn) {clearPhotoBtn.style.display = 'none';}
+    if (previewImage) { previewImage.style.display = 'none'; }
+    if (previewEmoji) { previewEmoji.style.display = ''; }
+    if (clearPhotoBtn) { clearPhotoBtn.style.display = 'none'; }
     const bg = AVATAR_DATA.backgrounds.find(b => b.id === tempAvatar.background);
     if (bg && bg.id !== 'none') {
       preview.style.backgroundImage = bg.css;
@@ -748,7 +753,7 @@ function renderAvatarPicker() {
       preview.style.backgroundImage = 'none';
       preview.style.backgroundColor = 'var(--bg-tertiary)';
     }
-    if (previewEmoji) {previewEmoji.textContent = tempAvatar.emoji;}
+    if (previewEmoji) { previewEmoji.textContent = tempAvatar.emoji; }
   }
   bgGrid.innerHTML = AVATAR_DATA.backgrounds.map(bg => `
         <button class="avatar-option ${tempAvatar.background === bg.id && !tempAvatar.photo ? 'selected' : ''} ${bg.id === 'none' ? 'bg-none' : ''}" 
@@ -767,7 +772,7 @@ function initAvatarPicker() {
   const uploadInput = document.getElementById('avatar-upload');
   const clearPhotoBtn = document.getElementById('avatar-clear-photo');
 
-  if (!modal || !openBtn) {return;}
+  if (!modal || !openBtn) { return; }
 
   openBtn.addEventListener('click', () => {
     tempAvatar = { ...settings.avatar };
@@ -785,7 +790,7 @@ function initAvatarPicker() {
 
   uploadInput?.addEventListener('change', (e) => {
     const file = e.target.files[0];
-    if (!file) {return;}
+    if (!file) { return; }
     if (file.size > 2 * 1024 * 1024) { alert('Image is too large. Max 2MB.'); return; }
     const reader = new FileReader();
     reader.onload = (ev) => { tempAvatar.photo = ev.target.result; tempAvatar.background = 'none'; renderAvatarPicker(); };
@@ -836,7 +841,7 @@ function showNotification(icon, text, subText = '', actionText = '', actionCallb
   if (arguments.length === 1) { text = icon; icon = ''; }
     
   const existing = document.querySelector('.dynamic-notification');
-  if (existing) {existing.remove();}
+  if (existing) { existing.remove(); }
     
   const notification = document.createElement('div');
   notification.className = 'dynamic-notification';
@@ -928,8 +933,8 @@ function renderGarden() {
     trophyEl.innerHTML = '';
     trophies.forEach(h => trophyEl.appendChild(createHabitCard(h, true)));
   }
-  if (countEl) {countEl.textContent = `${active.length}/${MAX_ACTIVE_HABITS}`;}
-  if (trophyCountEl) {trophyCountEl.textContent = trophies.length;}
+  if (countEl) { countEl.textContent = `${active.length}/${MAX_ACTIVE_HABITS}`; }
+  if (trophyCountEl) { trophyCountEl.textContent = trophies.length; }
   applyTranslations(settings.lang);
 }
 
@@ -937,12 +942,12 @@ function renderGarden() {
 /* MODALS                                       */
 /* ============================================ */
 
-function openModal(modal) { if (!modal) {return;} modal.classList.add('active'); document.body.style.overflow = 'hidden'; }
-function closeModal(modal) { if (!modal) {return;} modal.classList.remove('active'); document.body.style.overflow = ''; }
+function openModal(modal) { if (!modal) { return; } modal.classList.add('active'); document.body.style.overflow = 'hidden'; }
+function closeModal(modal) { if (!modal) { return; } modal.classList.remove('active'); document.body.style.overflow = ''; }
 
 function openStats(id) {
   const s = habits.getStats(id);
-  if (!s) {return;}
+  if (!s) { return; }
   document.getElementById('stats-title').textContent = s.name;
   const t = TRANSLATIONS[settings.lang];
   document.getElementById('stats-content').innerHTML = `
@@ -977,7 +982,7 @@ function exportData() {
   const a = document.createElement('a');
   a.href = url; a.download = `${BRANDING.BACKUP_PREFIX}-${getTodayStr()}.json`;
   a.click(); URL.revokeObjectURL(url);
-  showNotification( t.exported);    
+  showNotification(t.exported);    
 }
 
 function importData(file) {
@@ -988,21 +993,20 @@ function importData(file) {
       try {
         const data = JSON.parse(e.target.result);
         if (data.habits && Array.isArray(data.habits)) { storage.saveHabits(data.habits); resolve(true); }
-        else {reject(new Error('Invalid format'));}
+        else { reject(new Error('Invalid format')); }
       } catch (err) { reject(err); }
     };
     reader.readAsText(file);
-  }).then(() => { renderGarden(); showNotification( t.imported); })
+  }).then(() => { renderGarden(); showNotification(t.imported); })
     .catch(err => alert(err.message));
 }
 
-
-// ============================================ //
-// UPDATES SECTION                              //
-// ============================================ //
+/* ============================================ */
+/* UPDATES SECTION                              */
+/* ============================================ */
 
 const updateStatus = {
-  state: 'checking', // checking, available, downloading, downloaded, error, uptodate
+  state: 'checking',
   message: '',
   progress: 0,
   version: null
@@ -1011,11 +1015,9 @@ const updateStatus = {
 function updateUpdatesSection() {
   const isElectron = typeof window.electron !== 'undefined';
     
-
   const versionDisplay = document.getElementById('current-version-display');
   const codenameDisplay = document.getElementById('current-codename-display');
     
-
   if (versionDisplay) {
     versionDisplay.textContent = BRANDING?.VERSION || '0.3.1';
   }
@@ -1029,12 +1031,10 @@ function updateUpdatesSection() {
     return;
   }
     
-
   if (window.electron.onUpdateMessage) {
     window.electron.onUpdateMessage((message) => {
       console.log('[Updater]', message);
             
-
       if (message.includes('Checking for updates')) {
         updateStatusCard('checking', 'Checking...', message);
       } else if (message.includes('Update') && message.includes('found')) {
@@ -1044,7 +1044,6 @@ function updateUpdatesSection() {
       } else if (message.includes('Downloading')) {
         updateStatusCard('downloading', 'Downloading update', message);
       } else if (message.includes('Download progress')) {
-        // Парсим прогресс
         const percentMatch = message.match(/Downloaded (\d+)%/);
         if (percentMatch) {
           updateStatus.progress = parseInt(percentMatch[1]);
@@ -1066,22 +1065,17 @@ function updateUpdatesSection() {
     });
   }
     
-
   fetchReleaseInfo();
     
-
   document.getElementById('check-updates-btn')?.addEventListener('click', () => {
     if (updateStatus.state === 'downloaded') {
-
       window.electron.restartApp?.();
     } else {
-
       window.electron.checkForUpdates?.();
       updateStatusCard('checking', 'Checking for updates...', 'Contacting GitHub...');
     }
   });
     
-  // Ссылка на GitHub releases
   document.getElementById('view-releases-link')?.addEventListener('click', (e) => {
     e.preventDefault();
     window.open('https://github.com/krwg/CultivaDesktop/releases', '_blank');
@@ -1113,17 +1107,16 @@ function updateStatusCard(state, title, message) {
     icon.textContent = icons[state] || 'ℹ️';
   }
     
-  if (titleEl) {titleEl.textContent = title;}
-  if (messageEl) {messageEl.textContent = message;}
+  if (titleEl) { titleEl.textContent = title; }
+  if (messageEl) { messageEl.textContent = message; }
     
-  // Показываем/скрываем прогресс-бар
   const progressEl = document.getElementById('update-progress');
   if (progressEl) {
     progressEl.style.display = state === 'downloading' ? 'block' : 'none';
   }
 }
 
-function updateDownloadProgress(percent, message) {
+function updateDownloadProgress(percent, _message) {
   const progressBar = document.getElementById('update-progress-bar');
   const progressText = document.getElementById('update-progress-text');
     
@@ -1137,7 +1130,7 @@ function updateDownloadProgress(percent, message) {
 
 async function fetchReleaseInfo() {
   const releaseInfo = document.getElementById('release-info');
-  if (!releaseInfo) {return;}
+  if (!releaseInfo) { return; }
 
   const cached = localStorage.getItem('cultiva-releases-cache');
   const cacheTime = localStorage.getItem('cultiva-releases-cache-time');
@@ -1187,7 +1180,7 @@ async function fetchReleaseInfo() {
 
 function renderReleases(releases) {
   const releaseInfo = document.getElementById('release-info');
-  if (!releaseInfo) {return;}
+  if (!releaseInfo) { return; }
     
   const latestReleases = releases.slice(0, 3);
     
@@ -1221,6 +1214,7 @@ function renderReleases(releases) {
         `;
   }).join('');
 }
+
 /* ============================================ */
 /* AUTH UI LOGIC                                */
 /* ============================================ */
@@ -1237,26 +1231,26 @@ async function updateAuthUI() {
   const authTriggerEl = document.getElementById('auth-trigger');
   const signOutBtnEl = document.getElementById('sign-out-btn');
     
-  if (authTriggerEl) {authTriggerEl.style.display = isLoggedIn ? 'none' : 'flex';}
-  if (signOutBtnEl) {signOutBtnEl.style.display = isLoggedIn ? 'flex' : 'none';}
+  if (authTriggerEl) { authTriggerEl.style.display = isLoggedIn ? 'none' : 'flex'; }
+  if (signOutBtnEl) { signOutBtnEl.style.display = isLoggedIn ? 'flex' : 'none'; }
     
   const statusText = document.getElementById('user-status-text');
-  if (statusText) {statusText.textContent = isLoggedIn ? 'Signed In' : 'Local Storage';}
+  if (statusText) { statusText.textContent = isLoggedIn ? 'Signed In' : 'Local Storage'; }
     
   let displayName = 'Guest';
   let dropdownDisplay = 'Guest User';
     
   if (isLoggedIn && user) {
-    if (user.name && user.name.trim() !== '') {displayName = user.name;}
-    else if (user.email) {displayName = user.email.split('@')[0];}
+    if (user.name && user.name.trim() !== '') { displayName = user.name; }
+    else if (user.email) { displayName = user.email.split('@')[0]; }
     dropdownDisplay = user.email || 'User';
   }
     
   const headerName = document.getElementById('user-name-display');
   const dropdownName = document.getElementById('dropdown-user-name');
     
-  if (headerName) {headerName.textContent = displayName;}
-  if (dropdownName) {dropdownName.textContent = dropdownDisplay;}
+  if (headerName) { headerName.textContent = displayName; }
+  if (dropdownName) { dropdownName.textContent = dropdownDisplay; }
 
   if (isLoggedIn && user?.avatar) {
     settings.avatar = { ...user.avatar };
@@ -1280,8 +1274,8 @@ async function updateAuthUI() {
       dropAvatarLarge.style.background = (bg && bg.id !== 'none') ? bg.css : 'linear-gradient(135deg, var(--accent-purple), var(--accent-pink))';
     }
   }
-  if (isLoggedIn) {document.body.classList.add('authenticated');}
-  else {document.body.classList.remove('authenticated');}
+  if (isLoggedIn) { document.body.classList.add('authenticated'); }
+  else { document.body.classList.remove('authenticated'); }
 
   renderHeaderAvatar();
   updateProfileSection();
@@ -1291,12 +1285,12 @@ function switchAuthTab(tab) {
   document.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.auth-form').forEach(f => f.classList.toggle('active', f.id === `${tab}-form`));
   document.getElementById('auth-modal-title').textContent = tab === 'login' ? 'Sign In' : 'Sign Up';
-  if (authError) {authError.style.display = 'none';}
+  if (authError) { authError.style.display = 'none'; }
 }
 
 async function handleAuthSubmit(e, type) {
   e.preventDefault();
-  if (authError) {authError.style.display = 'none';}
+  if (authError) { authError.style.display = 'none'; }
     
   const emailInput = document.getElementById(type === 'login' ? 'login-email' : 'reg-email');
   const passInput = document.getElementById(type === 'login' ? 'login-password' : 'reg-password');
@@ -1310,7 +1304,7 @@ async function handleAuthSubmit(e, type) {
   }
 
   try {
-    if (type === 'login') {await auth.login({ email, password });}
+    if (type === 'login') { await auth.login({ email, password }); }
     else {
       const nameInput = document.getElementById('reg-name');
       const dobInput = document.getElementById('reg-dob');
@@ -1328,8 +1322,8 @@ async function handleAuthSubmit(e, type) {
     emailInput.value = ''; passInput.value = '';
     const nameInput = document.getElementById('reg-name');
     const dobInput = document.getElementById('reg-dob');
-    if (nameInput) {nameInput.value = '';}
-    if (dobInput) {dobInput.value = '';}
+    if (nameInput) { nameInput.value = ''; }
+    if (dobInput) { dobInput.value = ''; }
   } catch (err) {
     if (authError) { authError.textContent = err.message; authError.style.display = 'block'; }
   }
@@ -1366,14 +1360,14 @@ function initEvents() {
 
   document.querySelectorAll('input[name="track-type"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
-      if (targetContainer) {targetContainer.classList.toggle('visible', e.target.value === 'quantity');}
+      if (targetContainer) { targetContainer.classList.toggle('visible', e.target.value === 'quantity'); }
     });
   });
     
   habitForm?.addEventListener('submit', (e) => {
     e.preventDefault();
     const name = document.getElementById('habit-name')?.value.trim();
-    if (!name) {return;}
+    if (!name) { return; }
     const trackType = document.querySelector('input[name="track-type"]:checked')?.value || 'binary';
     try {
       habits.add({
@@ -1385,7 +1379,7 @@ function initEvents() {
         unit: trackType === 'quantity' ? document.getElementById('habit-unit')?.value.trim() || '' : ''
       });
       habitForm.reset();
-      if (targetContainer) {targetContainer.classList.remove('visible');}
+      if (targetContainer) { targetContainer.classList.remove('visible'); }
       document.querySelector('input[name="track-type"][value="binary"]').checked = true;
       closeModal(addModal); renderGarden();
       showNotification(TRANSLATIONS[settings.lang].habitPlanted);
@@ -1394,24 +1388,24 @@ function initEvents() {
     
   const handleCardClick = (e) => {
     const card = e.target.closest('.habit-card');
-    if (!card) {return;}
+    if (!card) { return; }
     const id = card.dataset.id;
     if (e.target.closest('.btn-card-primary')) {
       e.stopPropagation();
       const h = habits.getAll().find(x => x.id === id);
-      if (!h) {return;}
+      if (!h) { return; }
             
       const today = getTodayStr();
       const isCompleted = h.trackType === 'binary' 
         ? h.lastCompleted === today 
         : (h.dailyProgress?.[today] || 0) >= h.target;
                 
-      if (isCompleted) {return;}
+      if (isCompleted) { return; }
             
       if (h.trackType === 'quantity') {
         const cur = h.dailyProgress?.[today] || 0;
         const amt = prompt(`Enter ${h.unit}:`, cur);
-        if (amt === null) {return;}
+        if (amt === null) { return; }
         habits.toggle(id, parseFloat(amt) || 0);
       } else { habits.toggle(id); }
             
@@ -1433,12 +1427,12 @@ function initEvents() {
   document.getElementById('settings-export')?.addEventListener('click', exportData);
   document.getElementById('settings-import')?.addEventListener('click', () => {
     const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
-    input.onchange = (e) => { if (e.target.files?.[0]) {importData(e.target.files[0]);} };
+    input.onchange = (e) => { if (e.target.files?.[0]) { importData(e.target.files[0]); } };
     input.click();
   });
   document.getElementById('settings-reset')?.addEventListener('click', () => {
     const t = TRANSLATIONS[settings.lang];
-    if (confirm(t.reset + '?') && confirm('Are you absolutely sure?')) { storage.saveHabits([]); renderGarden(); showNotification( t.resetDone); }
+    if (confirm(t.reset + '?') && confirm('Are you absolutely sure?')) { storage.saveHabits([]); renderGarden(); showNotification(t.resetDone); }
   });
 
   authTrigger?.addEventListener('click', () => { openModal(authModal); closeUserMenu(); });
@@ -1459,7 +1453,7 @@ function initEvents() {
 function toggleFocusMode(enabled) {
   settings.focusMode = enabled;
   document.body.classList.toggle('focus-mode', enabled);
-  if (focusToggle) {focusToggle.checked = enabled;}
+  if (focusToggle) { focusToggle.checked = enabled; }
   storage.set('cultiva-settings', settings);
   renderGarden();
 }
@@ -1474,8 +1468,8 @@ function initDiscordSettings() {
   const discordContent = document.getElementById('section-discord');
   
   if (!isElectron) {
-    if (discordSection) {discordSection.style.display = 'none';}
-    if (discordContent) {discordContent.style.display = 'none';}
+    if (discordSection) { discordSection.style.display = 'none'; }
+    if (discordContent) { discordContent.style.display = 'none'; }
     return;
   }
   
@@ -1489,10 +1483,10 @@ function initDiscordSettings() {
   let sessionStartTime = null;
   
   const savedEnabled = localStorage.getItem('cultiva-discord-enabled') !== 'false';
-  if (discordToggle) {discordToggle.checked = savedEnabled;}
+  if (discordToggle) { discordToggle.checked = savedEnabled; }
   
   async function checkDiscordStatus() {
-    if (!window.discord) {return;}
+    if (!window.discord) { return; }
     try {
       const status = await window.discord.getStatus();
       const enabled = discordToggle?.checked || false;
@@ -1502,7 +1496,7 @@ function initDiscordSettings() {
         discordStatusBadge.textContent = '●';
         discordStatusBadge.style.color = '#4caf50';
         discordStatusText.textContent = t.discordConnected || 'Connected';
-        if (!sessionStartTime) {sessionStartTime = new Date();}
+        if (!sessionStartTime) { sessionStartTime = new Date(); }
       } else if (status.connected && !enabled) {
         discordStatusBadge.textContent = '○';
         discordStatusBadge.style.color = '#ff9500';
@@ -1524,28 +1518,28 @@ function initDiscordSettings() {
   }
   
   function updatePreviewTime() {
-    if (!previewTime || !sessionStartTime) {return;}
+    if (!previewTime || !sessionStartTime) { return; }
     const elapsed = Math.floor((new Date() - sessionStartTime) / 1000);
     const hours = Math.floor(elapsed / 3600);
     const minutes = Math.floor((elapsed % 3600) / 60);
     const seconds = elapsed % 60;
     
-    if (hours > 0) {previewTime.textContent = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} elapsed`;}
-    else {previewTime.textContent = `${minutes}:${seconds.toString().padStart(2, '0')} elapsed`;}
+    if (hours > 0) { previewTime.textContent = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} elapsed`; }
+    else { previewTime.textContent = `${minutes}:${seconds.toString().padStart(2, '0')} elapsed`; }
   }
   
   function updatePreviewText(details, state) {
-    if (previewDetails) {previewDetails.textContent = details || 'In the garden';}
-    if (previewState) {previewState.textContent = state || 'Growing habits';}
+    if (previewDetails) { previewDetails.textContent = details || 'In the garden'; }
+    if (previewState) { previewState.textContent = state || 'Growing habits'; }
   }
   
   function detectCurrentPage() {
     const url = window.location.href;
-    if (url.includes('/calendar')) {return 'calendar';}
-    if (url.includes('/pages/')) {return 'pages';}
-    if (url.includes('settings')) {return 'settings';}
-    if (url.includes('stats')) {return 'stats';}
-    if (url.includes('trophy')) {return 'trophy';}
+    if (url.includes('/calendar')) { return 'calendar'; }
+    if (url.includes('/pages/')) { return 'pages'; }
+    if (url.includes('settings')) { return 'settings'; }
+    if (url.includes('stats')) { return 'stats'; }
+    if (url.includes('trophy')) { return 'trophy'; }
     return 'garden';
   }
   
@@ -1566,7 +1560,7 @@ function initDiscordSettings() {
           await window.discord.disable();
           sessionStartTime = null;
           updatePreviewText('Rich Presence', 'Disabled');
-          if (previewTime) {previewTime.textContent = '--:--';}
+          if (previewTime) { previewTime.textContent = '--:--'; }
         }
         await checkDiscordStatus();
       }
@@ -1638,7 +1632,6 @@ if (typeof window.electron !== 'undefined' && window.electron.onUpdateMessage) {
   });
 }
 
-
 async function init() {
   try {
     await storage.init();
@@ -1655,7 +1648,7 @@ async function init() {
     await updateAuthUI();
     updateCultivaDatePreview();
     updateProfileSection();
-    console.log('Cultiva [0.3.1] initialized');
+    console.log('Cultiva [0.3.3] initialized');
   } catch (err) {
     console.error('Init failed:', err);
   }
