@@ -205,11 +205,11 @@ function applySettings() {
   if (langSelect) {langSelect.value = settings.lang;}
   applyTranslations(settings.lang);
     
- document.body.classList.remove(
+  document.body.classList.remove(
     'theme-light', 'theme-dark', 'theme-pink', 'theme-moon',
     'theme-evergreen', 'theme-blossom', 'theme-ocean', 'theme-sunset',
     'theme-frost', 'theme-cedar', 'theme-dusk', 'theme-meadow'
-);
+  );
     
   let appliedTheme = settings.theme;
   if (appliedTheme === 'auto') {
@@ -367,11 +367,11 @@ if (tzSelect) {
 
 const bgSelect = document.getElementById('bg-select');
 const bgContainers = {
-    aurora: document.getElementById('bg-aurora'),
-    rainfall: document.getElementById('bg-rainfall'),
-    starlight: document.getElementById('bg-starlight'),
-    snowfall: document.getElementById('bg-snowfall'),
-    fireflies: document.getElementById('bg-fireflies')
+  aurora: document.getElementById('bg-aurora'),
+  rainfall: document.getElementById('bg-rainfall'),
+  starlight: document.getElementById('bg-starlight'),
+  snowfall: document.getElementById('bg-snowfall'),
+  fireflies: document.getElementById('bg-fireflies')
 };
 
 const savedBg = localStorage.getItem('cultiva-background') || 'none';
@@ -385,24 +385,24 @@ bgSelect?.addEventListener('change', (e) => {
 });
 
 function applyBackground(bg) {
-    Object.values(bgContainers).forEach(el => { if (el) el.style.display = 'none'; });
-    document.body.classList.remove(
-        'with-bg-aurora', 'with-bg-rainfall', 'with-bg-starlight',
-        'with-bg-snowfall', 'with-bg-fireflies'
-    );
+  Object.values(bgContainers).forEach(el => { if (el) {el.style.display = 'none';} });
+  document.body.classList.remove(
+    'with-bg-aurora', 'with-bg-rainfall', 'with-bg-starlight',
+    'with-bg-snowfall', 'with-bg-fireflies'
+  );
     
-    if (bg === 'none') return;
+  if (bg === 'none') {return;}
     
-    const container = bgContainers[bg];
-    if (container) {
-        container.style.display = 'block';
-        document.body.classList.add(`with-bg-${bg}`);
+  const container = bgContainers[bg];
+  if (container) {
+    container.style.display = 'block';
+    document.body.classList.add(`with-bg-${bg}`);
         
-        if (bg === 'rainfall') generateRaindrops(container);
-        if (bg === 'starlight') generateStars(container);
-        if (bg === 'snowfall') generateSnowflakes(container);
-        if (bg === 'fireflies') generateFireflies(container);
-    }
+    if (bg === 'rainfall') {generateRaindrops(container);}
+    if (bg === 'starlight') {generateStars(container);}
+    if (bg === 'snowfall') {generateSnowflakes(container);}
+    if (bg === 'fireflies') {generateFireflies(container);}
+  }
 }
 
 function generateRaindrops(container) {
@@ -431,31 +431,31 @@ function generateStars(container) {
 }
 
 function generateSnowflakes(container) {
-    container.innerHTML = '';
-    const snowflakes = ['❄️', '❅', '❆', '✻', '✼', '❉'];
-    for (let i = 0; i < 40; i++) {
-        const flake = document.createElement('div');
-        flake.className = 'snowflake';
-        flake.textContent = snowflakes[Math.floor(Math.random() * snowflakes.length)];
-        flake.style.left = `${Math.random() * 100}%`;
-        flake.style.fontSize = `${0.8 + Math.random() * 1.5}em`;
-        flake.style.animationDelay = `${Math.random() * 5}s`;
-        flake.style.animationDuration = `${5 + Math.random() * 7}s`;
-        container.appendChild(flake);
-    }
+  container.innerHTML = '';
+  const snowflakes = ['❄️', '❅', '❆', '✻', '✼', '❉'];
+  for (let i = 0; i < 40; i++) {
+    const flake = document.createElement('div');
+    flake.className = 'snowflake';
+    flake.textContent = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+    flake.style.left = `${Math.random() * 100}%`;
+    flake.style.fontSize = `${0.8 + Math.random() * 1.5}em`;
+    flake.style.animationDelay = `${Math.random() * 5}s`;
+    flake.style.animationDuration = `${5 + Math.random() * 7}s`;
+    container.appendChild(flake);
+  }
 }
 
 function generateFireflies(container) {
-    container.innerHTML = '';
-    for (let i = 0; i < 25; i++) {
-        const fly = document.createElement('div');
-        fly.className = 'firefly';
-        fly.style.left = `${Math.random() * 100}%`;
-        fly.style.top = `${20 + Math.random() * 60}%`;
-        fly.style.animationDelay = `${Math.random() * 8}s`;
-        fly.style.animationDuration = `${6 + Math.random() * 10}s`;
-        container.appendChild(fly);
-    }
+  container.innerHTML = '';
+  for (let i = 0; i < 25; i++) {
+    const fly = document.createElement('div');
+    fly.className = 'firefly';
+    fly.style.left = `${Math.random() * 100}%`;
+    fly.style.top = `${20 + Math.random() * 60}%`;
+    fly.style.animationDelay = `${Math.random() * 8}s`;
+    fly.style.animationDuration = `${6 + Math.random() * 10}s`;
+    container.appendChild(fly);
+  }
 }
 
 /* ============================================ */
@@ -498,9 +498,9 @@ function initSettingsNavigation() {
     setTimeout(() => openModal(document.getElementById('avatar-modal')), 300);
   });
 
-      document.querySelector('[data-section="updates"]')?.addEventListener('click', () => {
-        updateUpdatesSection();
-    });
+  document.querySelector('[data-section="updates"]')?.addEventListener('click', () => {
+    updateUpdatesSection();
+  });
     
   document.getElementById('close-settings')?.addEventListener('click', () => {
     setTimeout(() => {
@@ -1001,180 +1001,180 @@ function importData(file) {
 // UPDATES SECTION                              //
 // ============================================ //
 
-let updateStatus = {
-    state: 'checking', // checking, available, downloading, downloaded, error, uptodate
-    message: '',
-    progress: 0,
-    version: null
+const updateStatus = {
+  state: 'checking', // checking, available, downloading, downloaded, error, uptodate
+  message: '',
+  progress: 0,
+  version: null
 };
 
 function updateUpdatesSection() {
-    const isElectron = typeof window.electron !== 'undefined';
+  const isElectron = typeof window.electron !== 'undefined';
     
 
-    const versionDisplay = document.getElementById('current-version-display');
-    const codenameDisplay = document.getElementById('current-codename-display');
+  const versionDisplay = document.getElementById('current-version-display');
+  const codenameDisplay = document.getElementById('current-codename-display');
     
 
-    if (versionDisplay) {
-        versionDisplay.textContent = BRANDING?.VERSION || '0.3.1';
-    }
-    if (codenameDisplay) {
-        codenameDisplay.textContent = BRANDING?.CODENAME || 'Sequoia';
-    }
+  if (versionDisplay) {
+    versionDisplay.textContent = BRANDING?.VERSION || '0.3.1';
+  }
+  if (codenameDisplay) {
+    codenameDisplay.textContent = BRANDING?.CODENAME || 'Sequoia';
+  }
     
-    if (!isElectron) {
-        updateStatusCard('browser', 'Browser mode', 'Updates only available in desktop app');
-        document.getElementById('check-updates-btn')?.setAttribute('disabled', 'disabled');
-        return;
-    }
+  if (!isElectron) {
+    updateStatusCard('browser', 'Browser mode', 'Updates only available in desktop app');
+    document.getElementById('check-updates-btn')?.setAttribute('disabled', 'disabled');
+    return;
+  }
     
 
-    if (window.electron.onUpdateMessage) {
-        window.electron.onUpdateMessage((message) => {
-            console.log('[Updater]', message);
+  if (window.electron.onUpdateMessage) {
+    window.electron.onUpdateMessage((message) => {
+      console.log('[Updater]', message);
             
 
-            if (message.includes('Checking for updates')) {
-                updateStatusCard('checking', 'Checking...', message);
-            } else if (message.includes('Update') && message.includes('found')) {
-                const versionMatch = message.match(/(\d+\.\d+\.\d+)/);
-                updateStatus.version = versionMatch ? versionMatch[1] : null;
-                updateStatusCard('available', 'Update available', message);
-            } else if (message.includes('Downloading')) {
-                updateStatusCard('downloading', 'Downloading update', message);
-            } else if (message.includes('Download progress')) {
-                // Парсим прогресс
-                const percentMatch = message.match(/Downloaded (\d+)%/);
-                if (percentMatch) {
-                    updateStatus.progress = parseInt(percentMatch[1]);
-                    updateDownloadProgress(updateStatus.progress, message);
-                }
-            } else if (message.includes('downloaded')) {
-                updateStatusCard('downloaded', 'Update ready', message);
-                document.getElementById('check-updates-btn').innerHTML = `
+      if (message.includes('Checking for updates')) {
+        updateStatusCard('checking', 'Checking...', message);
+      } else if (message.includes('Update') && message.includes('found')) {
+        const versionMatch = message.match(/(\d+\.\d+\.\d+)/);
+        updateStatus.version = versionMatch ? versionMatch[1] : null;
+        updateStatusCard('available', 'Update available', message);
+      } else if (message.includes('Downloading')) {
+        updateStatusCard('downloading', 'Downloading update', message);
+      } else if (message.includes('Download progress')) {
+        // Парсим прогресс
+        const percentMatch = message.match(/Downloaded (\d+)%/);
+        if (percentMatch) {
+          updateStatus.progress = parseInt(percentMatch[1]);
+          updateDownloadProgress(updateStatus.progress, message);
+        }
+      } else if (message.includes('downloaded')) {
+        updateStatusCard('downloaded', 'Update ready', message);
+        document.getElementById('check-updates-btn').innerHTML = `
                     <span class="btn-icon">🔄</span>
                     <span>Restart to Update</span>
                 `;
-            } else if (message.includes('latest version')) {
-                updateStatusCard('uptodate', 'Up to date', message);
-            } else if (message.includes('error')) {
-                updateStatusCard('error', 'Update error', message);
-            } else {
-                updateStatusCard('info', 'Update status', message);
-            }
-        });
+      } else if (message.includes('latest version')) {
+        updateStatusCard('uptodate', 'Up to date', message);
+      } else if (message.includes('error')) {
+        updateStatusCard('error', 'Update error', message);
+      } else {
+        updateStatusCard('info', 'Update status', message);
+      }
+    });
+  }
+    
+
+  fetchReleaseInfo();
+    
+
+  document.getElementById('check-updates-btn')?.addEventListener('click', () => {
+    if (updateStatus.state === 'downloaded') {
+
+      window.electron.restartApp?.();
+    } else {
+
+      window.electron.checkForUpdates?.();
+      updateStatusCard('checking', 'Checking for updates...', 'Contacting GitHub...');
     }
+  });
     
-
-    fetchReleaseInfo();
-    
-
-    document.getElementById('check-updates-btn')?.addEventListener('click', () => {
-        if (updateStatus.state === 'downloaded') {
-
-            window.electron.restartApp?.();
-        } else {
-
-            window.electron.checkForUpdates?.();
-            updateStatusCard('checking', 'Checking for updates...', 'Contacting GitHub...');
-        }
-    });
-    
-    // Ссылка на GitHub releases
-    document.getElementById('view-releases-link')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        window.open('https://github.com/krwg/CultivaDesktop/releases', '_blank');
-    });
+  // Ссылка на GitHub releases
+  document.getElementById('view-releases-link')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.open('https://github.com/krwg/CultivaDesktop/releases', '_blank');
+  });
 }
 
 function updateStatusCard(state, title, message) {
-    updateStatus.state = state;
+  updateStatus.state = state;
     
-    const card = document.getElementById('update-status-card');
-    const icon = document.getElementById('update-status-icon');
-    const titleEl = document.getElementById('update-status-title');
-    const messageEl = document.getElementById('update-status-message');
+  const card = document.getElementById('update-status-card');
+  const icon = document.getElementById('update-status-icon');
+  const titleEl = document.getElementById('update-status-title');
+  const messageEl = document.getElementById('update-status-message');
     
-    if (card) {
-        card.className = 'update-status-card ' + state;
-    }
+  if (card) {
+    card.className = 'update-status-card ' + state;
+  }
     
-    if (icon) {
-        const icons = {
-            checking: '🔍',
-            available: '⬇️',
-            downloading: '⬇️',
-            downloaded: '✅',
-            uptodate: '✓',
-            error: '❌',
-            browser: '🌐'
-        };
-        icon.textContent = icons[state] || 'ℹ️';
-    }
+  if (icon) {
+    const icons = {
+      checking: '🔍',
+      available: '⬇️',
+      downloading: '⬇️',
+      downloaded: '✅',
+      uptodate: '✓',
+      error: '❌',
+      browser: '🌐'
+    };
+    icon.textContent = icons[state] || 'ℹ️';
+  }
     
-    if (titleEl) titleEl.textContent = title;
-    if (messageEl) messageEl.textContent = message;
+  if (titleEl) {titleEl.textContent = title;}
+  if (messageEl) {messageEl.textContent = message;}
     
-    // Показываем/скрываем прогресс-бар
-    const progressEl = document.getElementById('update-progress');
-    if (progressEl) {
-        progressEl.style.display = state === 'downloading' ? 'block' : 'none';
-    }
+  // Показываем/скрываем прогресс-бар
+  const progressEl = document.getElementById('update-progress');
+  if (progressEl) {
+    progressEl.style.display = state === 'downloading' ? 'block' : 'none';
+  }
 }
 
 function updateDownloadProgress(percent, message) {
-    const progressBar = document.getElementById('update-progress-bar');
-    const progressText = document.getElementById('update-progress-text');
+  const progressBar = document.getElementById('update-progress-bar');
+  const progressText = document.getElementById('update-progress-text');
     
-    if (progressBar) {
-        progressBar.style.width = percent + '%';
-    }
-    if (progressText) {
-        progressText.textContent = `Downloading... ${percent}%`;
-    }
+  if (progressBar) {
+    progressBar.style.width = percent + '%';
+  }
+  if (progressText) {
+    progressText.textContent = `Downloading... ${percent}%`;
+  }
 }
 
 async function fetchReleaseInfo() {
-    const releaseInfo = document.getElementById('release-info');
-    if (!releaseInfo) return;
+  const releaseInfo = document.getElementById('release-info');
+  if (!releaseInfo) {return;}
 
-    const cached = localStorage.getItem('cultiva-releases-cache');
-    const cacheTime = localStorage.getItem('cultiva-releases-cache-time');
+  const cached = localStorage.getItem('cultiva-releases-cache');
+  const cacheTime = localStorage.getItem('cultiva-releases-cache-time');
     
-    if (cached && cacheTime && (Date.now() - parseInt(cacheTime)) < 3600000) {
-        renderReleases(JSON.parse(cached));
-        return;
+  if (cached && cacheTime && (Date.now() - parseInt(cacheTime)) < 3600000) {
+    renderReleases(JSON.parse(cached));
+    return;
+  }
+    
+  try {
+    const response = await fetch('https://api.github.com/repos/krwg/CultivaDesktop/releases');
+        
+    if (!response.ok) {
+      throw new Error(`GitHub API error: ${response.status}`);
     }
-    
-    try {
-        const response = await fetch('https://api.github.com/repos/krwg/CultivaDesktop/releases');
         
-        if (!response.ok) {
-            throw new Error(`GitHub API error: ${response.status}`);
-        }
+    const releases = await response.json();
         
-        const releases = await response.json();
+    if (!Array.isArray(releases) || releases.length === 0) {
+      releaseInfo.innerHTML = '<div class="release-loading">No releases found</div>';
+      return;
+    }
         
-        if (!Array.isArray(releases) || releases.length === 0) {
-            releaseInfo.innerHTML = '<div class="release-loading">No releases found</div>';
-            return;
-        }
+    localStorage.setItem('cultiva-releases-cache', JSON.stringify(releases));
+    localStorage.setItem('cultiva-releases-cache-time', Date.now().toString());
         
-        localStorage.setItem('cultiva-releases-cache', JSON.stringify(releases));
-        localStorage.setItem('cultiva-releases-cache-time', Date.now().toString());
+    renderReleases(releases);
         
-        renderReleases(releases);
+  } catch (error) {
+    console.error('Failed to fetch releases:', error);
         
-    } catch (error) {
-        console.error('Failed to fetch releases:', error);
+    if (cached) {
+      renderReleases(JSON.parse(cached));
+      return;
+    }
         
-        if (cached) {
-            renderReleases(JSON.parse(cached));
-            return;
-        }
-        
-        releaseInfo.innerHTML = `
+    releaseInfo.innerHTML = `
             <div class="release-loading">
                 Failed to load releases<br>
                 <a href="#" onclick="window.open('https://github.com/krwg/CultivaDesktop/releases', '_blank'); return false;" style="color: var(--accent-blue);">
@@ -1182,29 +1182,29 @@ async function fetchReleaseInfo() {
                 </a>
             </div>
         `;
-    }
+  }
 }
 
 function renderReleases(releases) {
-    const releaseInfo = document.getElementById('release-info');
-    if (!releaseInfo) return;
+  const releaseInfo = document.getElementById('release-info');
+  if (!releaseInfo) {return;}
     
-    const latestReleases = releases.slice(0, 3);
+  const latestReleases = releases.slice(0, 3);
     
-    releaseInfo.innerHTML = latestReleases.map((release, index) => {
-        const date = new Date(release.published_at).toLocaleDateString(
-            currentLang === 'ru' ? 'ru-RU' : 'en-US',
-            { year: 'numeric', month: 'short', day: 'numeric' }
-        );
+  releaseInfo.innerHTML = latestReleases.map((release, index) => {
+    const date = new Date(release.published_at).toLocaleDateString(
+      currentLang === 'ru' ? 'ru-RU' : 'en-US',
+      { year: 'numeric', month: 'short', day: 'numeric' }
+    );
         
-        const isLatest = index === 0 && !release.prerelease;
-        const badge = isLatest ? '<span class="release-badge latest">Latest</span>' :
-                     release.prerelease ? '<span class="release-badge prerelease">Pre-release</span>' : '';
+    const isLatest = index === 0 && !release.prerelease;
+    const badge = isLatest ? '<span class="release-badge latest">Latest</span>' :
+      release.prerelease ? '<span class="release-badge prerelease">Pre-release</span>' : '';
         
-        let body = release.body || 'No description';
-        body = body.replace(/[#*`]/g, '').substring(0, 200);
+    let body = release.body || 'No description';
+    body = body.replace(/[#*`]/g, '').substring(0, 200);
         
-        return `
+    return `
             <div class="release-item">
                 <div class="release-header">
                     <span class="release-tag">${release.name || release.tag_name}</span>
@@ -1219,7 +1219,7 @@ function renderReleases(releases) {
                 </button>
             </div>
         `;
-    }).join('');
+  }).join('');
 }
 /* ============================================ */
 /* AUTH UI LOGIC                                */

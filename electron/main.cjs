@@ -116,12 +116,12 @@ function shutdownDiscordRPC() {
 }
 
 function detectPageFromUrl(url) {
-  if (url.includes('/calendar')) return 'calendar';
-  if (url.includes('/pages/')) return 'pages';
-  if (url.includes('settings') || url.includes('settings-modal')) return 'settings';
-  if (url.includes('stats')) return 'stats';
-  if (url.includes('trophy')) return 'trophy';
-  if (url.includes('focus')) return 'focus';
+  if (url.includes('/calendar')) {return 'calendar';}
+  if (url.includes('/pages/')) {return 'pages';}
+  if (url.includes('settings') || url.includes('settings-modal')) {return 'settings';}
+  if (url.includes('stats')) {return 'stats';}
+  if (url.includes('trophy')) {return 'trophy';}
+  if (url.includes('focus')) {return 'focus';}
   return 'garden';
 }
 

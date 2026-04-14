@@ -15,7 +15,7 @@ let discordEnabled = true;
 
 contextBridge.exposeInMainWorld('discord', {
   updateActivity: (data) => {
-    if (!discordEnabled) return;
+    if (!discordEnabled) {return;}
     ipcRenderer.invoke('discord:update-activity', data);
   },
   getStatus: () => ipcRenderer.invoke('discord:status'),

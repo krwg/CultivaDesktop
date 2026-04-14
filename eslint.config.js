@@ -21,11 +21,13 @@ export default [
   },
 
   {
-    files: ['electron/**/*.js'],
+    files: ['electron/**/*.js', 'electron/**/*.cjs'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'commonjs',
-      globals: { ...globals.node },
+      globals: {
+        ...globals.node, 
+      },
     },
   },
 
